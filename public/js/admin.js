@@ -31,7 +31,11 @@
     }
 
     const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Não foi possível concluir a operação.');
+    if (!response.ok) {
+      const error = new Error(data.error || 'Não foi possível concluir a operação.');
+      error.hint = data.hint || '';
+      throw error;
+    }
     return data;
   }
 
@@ -50,7 +54,12 @@
     const values = {};
     for (const element of form.elements) {
       if (!element.name) continue;
-      if (element.type === 'checkbox') values[element.name] = element.checked;
+      if (element.type === 'checkbox') {
+        // Campos com value definido guardam texto ('1'/'0'); os demais, booleano.
+        values[element.name] = element.value && element.value !== 'on'
+          ? (element.checked ? element.value : '0')
+          : element.checked;
+      }
       else if (element.type === 'radio') {
         if (element.checked) values[element.name] = element.value;
       } else values[element.name] = element.value;
@@ -62,7 +71,8 @@
     for (const element of form.elements) {
       if (!element.name || !(element.name in values)) continue;
       const value = values[element.name];
-      if (element.type === 'checkbox') element.checked = Boolean(value);
+      // '0' e '' vêm das configurações como texto e são "desmarcado".
+      if (element.type === 'checkbox') element.checked = value !== '0' && Boolean(value);
       else if (element.type === 'radio') element.checked = element.value === String(value);
       else element.value = value ?? '';
     }
@@ -389,6 +399,59 @@
       toast(error.message, 'error');
     } finally {
       button.disabled = false;
+    }
+  });
+
+  /**
+   * Pergunta ao servidor o que é a URL colada: página de diretório, playlist
+   * (que ele abre para extrair a URL real) ou o áudio direto.
+   */
+  $('#resolve-stream').addEventListener('click', async () => {
+    const box = $('#resolve-result');
+    const campo = settingsForm.elements.stream_url;
+    const botao = $('#resolve-stream');
+
+    const mostrar = (texto, kind) => {
+      box.innerHTML = texto;
+      box.className =
+        'font-body-md text-body-md px-4 py-3 rounded-DEFAULT ' +
+        (kind === 'error'
+          ? 'bg-error-container text-on-error-container'
+          : kind === 'warn'
+            ? 'border border-outline-variant text-on-surface-variant'
+            : 'bg-surface-container text-on-surface');
+    };
+
+    botao.disabled = true;
+    mostrar('Verificando…', 'warn');
+
+    try {
+      const data = await api('/admin/stream/resolve', {
+        method: 'POST',
+        body: { url: campo.value }
+      });
+
+      if (data.resolvedFrom) campo.value = data.url;
+
+      const linhas = [];
+      if (data.resolvedFrom) {
+        linhas.push(`Extraí o endereço de dentro da playlist: <strong>${escapeHtml(data.url)}</strong>`);
+      }
+      linhas.push(escapeHtml(data.probe.message));
+      if (data.probe.insecure) {
+        linhas.push(
+          'Atenção: essa transmissão é <strong>http</strong>. Em um site https o navegador bloqueia — ' +
+            'marque "Retransmitir pelo servidor" para contornar.'
+        );
+      }
+      if (data.probe.ok) linhas.push('Não esqueça de salvar as configurações.');
+
+      mostrar(linhas.join('<br>'), data.probe.ok ? 'success' : 'error');
+    } catch (error) {
+      const hint = error.hint ? `<br><span class="font-label-sm text-label-sm">${escapeHtml(error.hint)}</span>` : '';
+      mostrar(escapeHtml(error.message) + hint, 'error');
+    } finally {
+      botao.disabled = false;
     }
   });
 

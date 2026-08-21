@@ -13,7 +13,8 @@
 
   const audio = new Audio();
   audio.preload = 'none';
-  audio.crossOrigin = 'anonymous';
+  // Sem crossOrigin: exigir CORS faria a maioria dos servidores de rádio
+  // (Icecast/Shoutcast) recusar a conexão. O <audio> não precisa disso.
 
   let streamUrl = '';
   let reconnectAttempt = 0;
@@ -84,16 +85,6 @@
     });
   }
 
-  /**
-   * Streams ao vivo não podem ser retomados de um buffer antigo: a cada play
-   * recarregamos a URL com um parâmetro novo para pegar o ponto atual.
-   */
-  function freshSource() {
-    if (!streamUrl) return '';
-    const separator = streamUrl.includes('?') ? '&' : '?';
-    return `${streamUrl}${separator}_=${Date.now()}`;
-  }
-
   async function play() {
     if (!streamUrl) {
       setStatus('SEM TRANSMISSÃO');
@@ -107,7 +98,9 @@
     wantsToPlay = true;
     clearTimeout(reconnectTimer);
     setStatus('CONECTANDO…');
-    audio.src = freshSource();
+    // Reatribuir o src abre uma conexão nova, pegando o ponto atual da
+    // transmissão. Nada de parâmetro extra na URL: Shoutcast recusa.
+    audio.src = streamUrl;
     try {
       await audio.play();
       reconnectAttempt = 0;

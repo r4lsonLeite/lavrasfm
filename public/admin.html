@@ -240,10 +240,29 @@
 
         <label class="flex flex-col gap-1">
           <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">URL do streaming *</span>
-          <input name="stream_url" type="url" placeholder="https://servidor.com:8000/stream"
+          <input name="stream_url" placeholder="https://servidor.com:8000/stream"
                  class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
           <span class="font-label-sm text-label-sm text-on-surface-variant">
-            Endereço direto do Icecast/Shoutcast (ou .m3u8). Precisa ser https para tocar em sites https.
+            O endereço do áudio em si — não o link da página onde a rádio toca.
+            Pode colar também um arquivo .m3u, .pls ou .asx: eu extraio a URL de dentro dele.
+          </span>
+        </label>
+
+        <button type="button" id="resolve-stream"
+                class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">travel_explore</span> Verificar endereço
+        </button>
+        <div id="resolve-result" class="hidden font-body-md text-body-md px-4 py-3 rounded-DEFAULT"></div>
+
+        <label class="flex items-start gap-2 border border-outline-variant rounded-DEFAULT p-4">
+          <input type="checkbox" name="stream_relay" value="1"
+                 class="mt-1 rounded-DEFAULT border-outline-variant text-primary focus:ring-primary">
+          <span>
+            <span class="font-body-md text-body-md block">Retransmitir pelo servidor</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant">
+              Ligue se o áudio não tocar no site. Resolve transmissão em http dentro de site https
+              e servidores que bloqueiam o navegador. O áudio passa a consumir a banda do seu servidor.
+            </span>
           </span>
         </label>
 

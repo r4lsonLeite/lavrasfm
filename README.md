@@ -12,15 +12,18 @@ O layout segue o rascunho feito no Stitch (mesmas cores, tipografia e grade).
   (espaço ou `K`) e reconexão automática com backoff quando o streaming cai.
 - **Painel administrativo** em `/admin`, protegido por login.
   - **Notícias**: o responsável cola o link da matéria, escreve título/resumo e
-    escolhe como destacar — banner do topo, card largo, card lateral ou card
-    normal —, com opção de fundo preto, ordem manual e publicar/despublicar.
+    escolhe como destacar — **manchete** (chamada grande com foto larga),
+    **destaque lateral** (coluna de três ao lado da manchete) ou **grade**
+    (cards menores abaixo) —, com ordem manual e publicar/despublicar.
   - **Vídeos & Lives**: cola o link do YouTube (aceita `watch?v=`, `youtu.be`,
     `/live/`, `/embed/` e shorts), marca se é live ou vídeo gravado e escolhe
     qual fica em destaque na home.
   - **Rádio & Site**: URL do streaming (com botão para testar antes de salvar),
     o que está no ar agora, nome, slogan, redes sociais e rodapé.
   - **Conta**: troca de senha.
-- **Home** montada a partir do que está cadastrado, sem tocar em código.
+- **Home** com capa no formato de portal de notícias: uma manchete grande, três
+  destaques na coluna lateral e uma grade abaixo, montada a partir do que está
+  cadastrado — sem tocar em código.
 
 ## Como rodar
 
@@ -46,18 +49,42 @@ execução — anote, ela não é mostrada de novo. Troque depois na aba *Conta*
 
 ## Configurando a transmissão
 
-No painel, aba **Rádio & Site**, informe a URL direta do seu servidor de
-streaming (Icecast, Shoutcast ou um `.m3u8`) — algo como
-`https://servidor.com.br:8000/stream`. Use o botão **Testar transmissão** para
-confirmar antes de salvar.
+No painel, aba **Rádio & Site**, cole o endereço no campo *URL do streaming* e
+clique em **Verificar endereço**. O servidor identifica o que você colou e
+responde o que fazer.
 
-Dois pontos costumam derrubar o player:
+### O erro mais comum
 
-- **A URL precisa ser `https`** se o site estiver em `https`. Navegadores
-  bloqueiam áudio em `http` dentro de uma página segura.
-- **CORS**: o servidor de streaming precisa responder com
-  `Access-Control-Allow-Origin: *` (ou o domínio do site). A maioria dos
-  painéis de Icecast/Shoutcast tem essa opção.
+O link da página onde a rádio toca **não é** o endereço da transmissão. Um
+endereço como `https://www.radios.com.br/aovivo/radio-lavras-993-fm/31920` é
+uma página HTML — o player do navegador não tem como tocar isso. O painel
+detecta e avisa quando esse tipo de link é colado.
+
+O endereço certo é o do áudio em si, algo como
+`https://servidor.com.br:8000/stream`.
+
+### Como achar o endereço certo
+
+Nos diretórios de rádio (radios.com.br, tudoradio, RadiosNet), procure a opção
+de **ouvir em outro player** — ela oferece um arquivo `.m3u`, `.pls` ou `.asx`.
+Cole esse link no painel: o servidor abre o arquivo, extrai a URL real de dentro
+dele e já preenche o campo. Quem hospeda a transmissão também pode informar o
+endereço direto.
+
+### Se mesmo assim não tocar
+
+Dois bloqueios do navegador costumam ser a causa:
+
+- **Transmissão em `http` num site `https`.** O navegador recusa conteúdo não
+  seguro dentro de uma página segura.
+- **Servidor sem CORS.** Alguns Icecast/Shoutcast recusam requisições vindas de
+  outro domínio.
+
+Para os dois casos, marque **Retransmitir pelo servidor** na mesma aba. O áudio
+passa a ser servido por `/api/stream`, no mesmo domínio e protocolo do site,
+o que contorna as duas restrições. Em troca, o tráfego dos ouvintes passa a
+consumir a banda do seu servidor — deixe desligado se a transmissão já tocar
+direto.
 
 ## Estrutura
 
@@ -68,6 +95,7 @@ server/
   auth.js       senhas com scrypt, sessões em cookie, limite de tentativas
   content.js    regras e validação de notícias e vídeos
   youtube.js    extração do ID do YouTube a partir da URL
+  stream.js     resolve playlists .m3u/.pls/.asx e verifica a transmissão
   routes/api.js API pública e API do painel
   seed.js       conteúdo de exemplo
 public/

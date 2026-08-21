@@ -3,10 +3,18 @@ import { parseYoutubeId, youtubeThumbnail, youtubeEmbedUrl } from './youtube.js'
 
 /** Níveis de destaque disponíveis para uma notícia no painel. */
 export const HIGHLIGHTS = {
-  banner: { label: 'Banner principal', description: 'Ocupa o topo da home, com imagem grande.' },
-  destaque: { label: 'Destaque', description: 'Card largo na grade de notícias.' },
-  secundaria: { label: 'Secundária', description: 'Card alto ao lado do destaque.' },
-  normal: { label: 'Normal', description: 'Card padrão na grade.' }
+  banner: {
+    label: 'Manchete',
+    description: 'A chamada grande no topo, com foto larga. Use em uma notícia por vez.'
+  },
+  destaque: {
+    label: 'Destaque lateral',
+    description: 'Coluna ao lado da manchete. Cabem três; as demais caem na grade.'
+  },
+  normal: {
+    label: 'Grade',
+    description: 'Cards menores abaixo da manchete.'
+  }
 };
 
 export const VIDEO_KINDS = {

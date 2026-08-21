@@ -72,12 +72,19 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
 
+// Migração: o layout novo usa três níveis de destaque — a antiga
+// "secundária" passou a ser "destaque".
+db.exec("UPDATE news SET highlight = 'destaque' WHERE highlight = 'secundaria'");
+
 /** Valores padrão das configurações do site. */
 export const DEFAULT_SETTINGS = {
   station_name: 'LavrasFM',
   tagline: 'A rádio de Lavras, ao vivo, 24 horas por dia.',
   stream_url: '',
   stream_format: 'audio/mpeg',
+  // '1' faz o áudio passar pelo próprio servidor — resolve stream em http
+  // dentro de site https e servidores sem CORS.
+  stream_relay: '0',
   now_playing: 'Programação Musical',
   live_label: 'AO VIVO',
   whatsapp: '',

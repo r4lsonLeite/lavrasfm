@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { resolveStreamUrl, probeStream, StreamError } from '../stream.js';
 import { getSettings, saveSettings, DEFAULT_SETTINGS } from '../db.js';
 import {
   HIGHLIGHTS,
@@ -30,11 +31,18 @@ export const api = Router();
 /* --------------------------------- Público ---------------------------------- */
 
 // Tudo o que a home precisa em uma única chamada.
+/** URL que o navegador deve tocar: a do relay, se ligado, ou a original. */
+function playableStreamUrl(settings) {
+  if (!settings.stream_url) return '';
+  return settings.stream_relay === '1' ? '/api/stream' : settings.stream_url;
+}
+
 api.get('/site', (_req, res) => {
   const news = listNews();
   const videos = listVideos();
+  const settings = getSettings();
   res.json({
-    settings: getSettings(),
+    settings: { ...settings, stream_url: playableStreamUrl(settings) },
     banner: news.find((item) => item.highlight === 'banner') || null,
     news: news.filter((item) => item.highlight !== 'banner'),
     featuredVideo: videos.find((video) => video.featured) || videos[0] || null,
@@ -44,12 +52,56 @@ api.get('/site', (_req, res) => {
 
 api.get('/news', (_req, res) => res.json({ news: listNews() }));
 api.get('/videos', (_req, res) => res.json({ videos: listVideos() }));
+/**
+ * Retransmite o áudio da rádio pelo próprio servidor. Serve para streams em
+ * http (bloqueados dentro de um site https) e para servidores sem CORS.
+ * Só funciona quando a opção está ligada no painel.
+ */
+api.get('/stream', async (req, res) => {
+  const settings = getSettings();
+  if (settings.stream_relay !== '1' || !settings.stream_url) {
+    return res.status(404).json({ error: 'Retransmissão desativada.' });
+  }
+
+  const upstream = new AbortController();
+  req.on('close', () => upstream.abort());
+
+  try {
+    const response = await fetch(settings.stream_url, {
+      headers: { 'User-Agent': 'LavrasFM/1.0' },
+      signal: upstream.signal,
+      redirect: 'follow'
+    });
+    if (!response.ok || !response.body) {
+      return res.status(502).json({ error: 'A transmissão não respondeu.' });
+    }
+
+    res.setHeader('Content-Type', response.headers.get('content-type') || settings.stream_format);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    for await (const chunk of response.body) {
+      if (!res.write(chunk)) {
+        await new Promise((resolve) => res.once('drain', resolve));
+      }
+    }
+    res.end();
+  } catch (error) {
+    // Abortar quando o ouvinte fecha a aba é o caminho normal, não um erro.
+    if (error?.name !== 'AbortError' && !res.headersSent) {
+      res.status(502).json({ error: 'Falha ao retransmitir a rádio.' });
+    } else {
+      res.end();
+    }
+  }
+});
+
 api.get('/now-playing', (_req, res) => {
   const settings = getSettings();
   res.json({
     station_name: settings.station_name,
     now_playing: settings.now_playing,
-    stream_url: settings.stream_url,
+    stream_url: playableStreamUrl(settings),
     stream_format: settings.stream_format
   });
 });
@@ -134,6 +186,17 @@ admin.delete('/videos/:id', (req, res) => {
     : res.status(404).json({ error: 'Vídeo não encontrado.' });
 });
 
+/** Resolve o que foi colado (playlist, página de diretório, URL direta). */
+admin.post('/stream/resolve', async (req, res, next) => {
+  try {
+    const resolved = await resolveStreamUrl(req.body?.url);
+    const probe = await probeStream(resolved.url);
+    res.json({ ...resolved, probe });
+  } catch (error) {
+    next(error);
+  }
+});
+
 admin.get('/settings', (_req, res) => res.json({ settings: getSettings() }));
 admin.put('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
 
@@ -141,6 +204,9 @@ api.use('/admin', admin);
 
 // Erros de validação viram 400 com mensagem legível; o resto vira 500.
 api.use((err, _req, res, _next) => {
+  if (err instanceof StreamError || err?.name === 'StreamError') {
+    return res.status(400).json({ error: err.message, hint: err.hint || '' });
+  }
   if (err instanceof ValidationError || err?.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });
   }

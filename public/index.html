@@ -18,7 +18,7 @@
   <div class="flex justify-between items-center max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop h-20">
     <a href="/" class="font-headline-md text-headline-md font-bold text-primary" data-station-name>LavrasFM</a>
     <nav class="hidden md:flex gap-8 items-center h-full">
-      <a class="font-body-md text-body-md text-primary border-b-2 border-primary h-full flex items-center pt-[2px]" href="#topo">Início</a>
+      <a class="font-body-md text-body-md text-primary border-b-2 border-primary h-full flex items-center pt-[2px]" href="/">Início</a>
       <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors h-full flex items-center" href="#noticias">Notícias</a>
       <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors h-full flex items-center" href="#videos">Vídeos</a>
       <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors h-full flex items-center" href="#contato">Contato</a>
@@ -32,58 +32,18 @@
   </div>
 </header>
 
-<!-- Faixa "no ar agora" -->
-<section id="topo" class="w-full bg-surface-container-lowest border-b border-outline-variant">
-  <div class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop min-h-16 py-3 md:py-0 flex flex-wrap items-center justify-between gap-4 md:gap-8">
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-2 bg-surface-container px-3 py-1 rounded-full">
-        <span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
-        <span class="font-label-sm text-label-sm text-on-surface">AO VIVO</span>
-      </div>
-      <div class="flex flex-col">
-        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Agora</span>
-        <span class="font-body-md text-body-md font-bold text-primary" data-now-playing>Programação Musical</span>
-      </div>
-    </div>
-    <div class="flex-grow flex items-center gap-6 order-3 md:order-2 w-full md:w-auto">
-      <button data-play-toggle class="w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center hover:scale-105 transition-transform shrink-0">
-        <span class="material-symbols-outlined" data-play-icon>play_arrow</span>
-      </button>
-      <div class="flex-grow flex items-center gap-1 h-6 text-primary" data-equalizer>
-        <span class="eq-bar" style="animation-delay:0ms"></span>
-        <span class="eq-bar" style="animation-delay:120ms"></span>
-        <span class="eq-bar" style="animation-delay:240ms"></span>
-        <span class="eq-bar" style="animation-delay:360ms"></span>
-        <span class="eq-bar" style="animation-delay:480ms"></span>
-        <span class="eq-bar" style="animation-delay:600ms"></span>
-        <span class="eq-bar" style="animation-delay:720ms"></span>
-        <span class="eq-bar" style="animation-delay:840ms"></span>
-        <span class="eq-bar" style="animation-delay:960ms"></span>
-      </div>
-    </div>
-    <div class="flex items-center gap-3 order-2 md:order-3">
-      <button data-mute-toggle class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" title="Silenciar" data-volume-icon>volume_up</button>
-      <input data-volume type="range" min="0" max="100" value="80" class="volume w-24" aria-label="Volume">
-    </div>
-  </div>
-</section>
+<main class="flex-grow max-w-[1200px] w-full mx-auto px-margin-mobile md:px-margin-desktop py-10 flex flex-col gap-[56px]">
 
-<main class="flex-grow max-w-[1200px] w-full mx-auto px-margin-mobile md:px-margin-desktop py-12 flex flex-col gap-[64px]">
-
-  <!-- Banner em destaque (definido no painel) -->
-  <section data-banner-slot></section>
-
-  <!-- Notícias -->
+  <!-- Capa: manchete grande + 3 destaques laterais + grade -->
   <section id="noticias">
-    <h2 class="font-headline-md text-headline-md text-primary mb-8 pb-4 border-b border-outline-variant">Últimas Notícias</h2>
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter" data-news-grid>
-      <p class="md:col-span-12 font-body-md text-body-md text-on-surface-variant">Carregando notícias…</p>
+    <div data-cover>
+      <p class="font-body-md text-body-md text-on-surface-variant">Carregando notícias…</p>
     </div>
   </section>
 
   <!-- Vídeos e lives -->
   <section id="videos">
-    <h2 class="font-headline-md text-headline-md text-primary mb-8 pb-4 border-b border-outline-variant">Vídeos &amp; Lives</h2>
+    <h2 class="font-headline-md text-headline-md text-primary mb-6 pb-4 border-b-2 border-primary">Vídeos &amp; Lives</h2>
     <div data-video-slot></div>
   </section>
 </main>

@@ -2,8 +2,7 @@
 (function () {
   'use strict';
 
-  const grid = document.querySelector('[data-news-grid]');
-  const bannerSlot = document.querySelector('[data-banner-slot]');
+  const cover = document.querySelector('[data-cover]');
   const videoSlot = document.querySelector('[data-video-slot]');
 
   const escapeHtml = (value) =>
@@ -35,67 +34,107 @@
     return parts.join(' · ');
   }
 
-  function bannerHtml(item) {
+  /** Manchete: foto larga, chapéu, título grande. */
+  function headlineHtml(item) {
     const image = item.image_url
-      ? `<img class="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 transition-all duration-700" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">`
-      : '<div class="w-full h-full bg-surface-container-high"></div>';
+      ? `<div class="w-full aspect-[16/9] bg-surface-container-high overflow-hidden mb-5 rounded-DEFAULT">
+           <img class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                src="${escapeHtml(item.image_url)}" alt="" loading="eager">
+         </div>`
+      : '';
 
     return `
       <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"
-         class="relative block bg-surface-container-low border border-outline-variant overflow-hidden group rounded-DEFAULT">
-        <div class="grid md:grid-cols-2 min-h-[400px]">
-          <div class="p-8 md:p-16 flex flex-col justify-center order-2 md:order-1">
-            <span class="font-label-sm text-label-sm text-primary mb-4 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-primary block"></span> ${escapeHtml(item.category || 'EM DESTAQUE')}
-            </span>
-            <h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-6">${escapeHtml(item.title)}</h1>
-            ${item.excerpt ? `<p class="font-body-lg text-body-lg text-on-surface-variant mb-8">${escapeHtml(item.excerpt)}</p>` : ''}
-            <span class="bg-primary text-on-primary font-label-sm text-label-sm px-8 py-4 w-max border border-primary group-hover:bg-transparent group-hover:text-primary transition-colors rounded">
-              Saiba mais
-            </span>
-            ${meta(item) ? `<span class="mt-6 font-label-sm text-label-sm text-on-surface-variant">${escapeHtml(meta(item))}</span>` : ''}
-          </div>
-          <div class="order-1 md:order-2 h-64 md:h-auto">${image}</div>
-        </div>
+         class="md:col-span-8 group block">
+        ${image}
+        <span class="font-label-sm text-label-sm text-error uppercase mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-error block"></span> ${escapeHtml(item.category)}
+        </span>
+        <h2 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary group-hover:underline decoration-2 underline-offset-4">
+          ${escapeHtml(item.title)}
+        </h2>
+        ${item.excerpt ? `<p class="font-body-lg text-body-lg text-on-surface-variant mt-4">${escapeHtml(item.excerpt)}</p>` : ''}
+        ${meta(item) ? `<p class="font-label-sm text-label-sm text-on-surface-variant mt-4">${escapeHtml(meta(item))}</p>` : ''}
       </a>`;
   }
 
-  function newsCardHtml(item) {
-    const inverted = item.invert;
-    const span = item.highlight === 'destaque' ? 'md:col-span-8' : 'md:col-span-4';
-    const minHeight = item.highlight === 'normal' ? 'min-h-[200px]' : 'min-h-[300px]';
-    const padding = item.highlight === 'destaque' ? 'p-8' : 'p-6';
-
-    const surface = inverted
-      ? 'bg-primary text-on-primary border-primary'
-      : 'bg-surface border-outline-variant hover:border-primary';
-    const label = inverted ? 'text-on-secondary-container' : 'text-on-surface-variant';
-    const title = inverted ? 'text-on-primary' : 'text-primary';
-    const titleSize =
-      item.highlight === 'destaque'
-        ? 'font-display-lg-mobile text-display-lg-mobile'
-        : 'font-headline-md text-headline-md';
-
-    const thumb =
-      item.image_url && item.highlight !== 'normal'
-        ? `<img src="${escapeHtml(item.image_url)}" alt="" loading="lazy"
-             class="w-full h-40 object-cover mb-4 rounded-DEFAULT ${inverted ? 'opacity-90' : ''}">`
-        : '';
+  /** Destaque lateral: título à esquerda, miniatura à direita. */
+  function sideHtml(item) {
+    const thumb = item.image_url
+      ? `<div class="w-24 h-20 shrink-0 bg-surface-container-high overflow-hidden rounded-DEFAULT">
+           <img class="w-full h-full object-cover" src="${escapeHtml(item.image_url)}" alt="" loading="lazy">
+         </div>`
+      : '';
 
     return `
       <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"
-         class="${span} ${minHeight} ${padding} ${surface} border flex flex-col justify-between group transition-colors rounded-DEFAULT">
-        <div>
-          ${thumb}
-          <span class="font-label-sm text-label-sm ${label} mb-2 block">${escapeHtml(item.category)}</span>
-          <h3 class="${titleSize} ${title} mb-3 group-hover:underline">${escapeHtml(item.title)}</h3>
-          ${item.excerpt && item.highlight !== 'normal' ? `<p class="font-body-md text-body-md ${label} line-clamp-3">${escapeHtml(item.excerpt)}</p>` : ''}
+         class="group flex gap-4 items-start py-5 first:pt-0 last:pb-0">
+        <div class="min-w-0 flex-grow">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase block mb-1">${escapeHtml(item.category)}</span>
+          <h3 class="font-body-lg text-body-lg font-bold text-primary group-hover:underline decoration-2 underline-offset-2">
+            ${escapeHtml(item.title)}
+          </h3>
+          ${meta(item) ? `<p class="font-label-sm text-label-sm text-on-surface-variant mt-2">${escapeHtml(meta(item))}</p>` : ''}
         </div>
-        <div class="mt-6 font-label-sm text-label-sm ${label} flex items-center justify-between gap-4">
-          <span>${escapeHtml(meta(item))}</span>
-          <span class="material-symbols-outlined ${inverted ? 'text-on-primary' : 'text-on-surface-variant group-hover:text-primary'}">arrow_forward</span>
-        </div>
+        ${thumb}
       </a>`;
+  }
+
+  /** Card da grade inferior: foto em cima, título embaixo. */
+  function gridCardHtml(item) {
+    const image = item.image_url
+      ? `<div class="w-full aspect-[16/9] bg-surface-container-high overflow-hidden mb-3 rounded-DEFAULT">
+           <img class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                src="${escapeHtml(item.image_url)}" alt="" loading="lazy">
+         </div>`
+      : '<div class="w-full h-1 bg-primary mb-3"></div>';
+
+    return `
+      <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="group block">
+        ${image}
+        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase block mb-1">${escapeHtml(item.category)}</span>
+        <h3 class="font-body-lg text-body-lg font-bold text-primary group-hover:underline decoration-2 underline-offset-2 line-clamp-3">
+          ${escapeHtml(item.title)}
+        </h3>
+        ${meta(item) ? `<p class="font-label-sm text-label-sm text-on-surface-variant mt-2">${escapeHtml(meta(item))}</p>` : ''}
+      </a>`;
+  }
+
+  /**
+   * Monta a capa. A manchete é a notícia marcada como "banner"; na falta dela,
+   * a primeira da fila assume, para a página nunca ficar sem chamada principal.
+   */
+  function coverHtml(items) {
+    if (!items.length) {
+      return emptyState('Nenhuma notícia publicada ainda. Adicione a primeira pelo painel administrativo.');
+    }
+
+    const restantes = [...items];
+    const indiceManchete = restantes.findIndex((item) => item.highlight === 'banner');
+    const [manchete] = restantes.splice(indiceManchete >= 0 ? indiceManchete : 0, 1);
+
+    const laterais = [];
+    for (const nivel of ['destaque', 'normal']) {
+      for (let i = 0; i < restantes.length && laterais.length < 3; ) {
+        if (restantes[i].highlight === nivel) laterais.push(restantes.splice(i, 1)[0]);
+        else i += 1;
+      }
+    }
+
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+        ${headlineHtml(manchete)}
+        <div class="md:col-span-4 flex flex-col divide-y divide-outline-variant md:border-l md:border-outline-variant md:pl-6">
+          ${laterais.length ? laterais.map(sideHtml).join('') : ''}
+        </div>
+      </div>
+      ${
+        restantes.length
+          ? `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mt-10 pt-10 border-t-2 border-primary">
+               ${restantes.map(gridCardHtml).join('')}
+             </div>`
+          : ''
+      }`;
   }
 
   function featuredVideoHtml(video) {
@@ -212,17 +251,13 @@
       if (!response.ok) throw new Error('Falha ao carregar o conteúdo.');
       data = await response.json();
     } catch {
-      grid.innerHTML = `<div class="md:col-span-12">${emptyState('Não foi possível carregar o conteúdo. Tente atualizar a página.')}</div>`;
+      cover.innerHTML = emptyState('Não foi possível carregar o conteúdo. Tente atualizar a página.');
       return;
     }
 
     renderSettings(data.settings);
 
-    bannerSlot.innerHTML = data.banner ? bannerHtml(data.banner) : '';
-
-    grid.innerHTML = data.news.length
-      ? data.news.map(newsCardHtml).join('')
-      : `<div class="md:col-span-12">${emptyState('Nenhuma notícia publicada ainda. Adicione a primeira pelo painel administrativo.')}</div>`;
+    cover.innerHTML = coverHtml(data.banner ? [data.banner, ...data.news] : data.news);
 
     const others = data.videos.filter((video) => video.id !== data.featuredVideo?.id).slice(0, 4);
     videoSlot.innerHTML = data.featuredVideo

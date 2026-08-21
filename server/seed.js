@@ -41,6 +41,7 @@ createNews({
   url: 'https://exemplo.com.br/novo-album-ecos-da-serra',
   category: 'MÚSICA',
   excerpt: "A banda 'Ecos da Serra' lança seu terceiro trabalho de estúdio com boa recepção da crítica e do público da região.",
+  image_url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
   source: 'Redação LavrasFM',
   highlight: 'destaque',
   position: 1,
@@ -52,7 +53,8 @@ createNews({
   url: 'https://exemplo.com.br/exposicao-arte-moderna',
   category: 'CULTURA',
   excerpt: 'Mostra reúne 40 obras de artistas mineiros no centro cultural da cidade.',
-  highlight: 'secundaria',
+  image_url: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800&q=80',
+  highlight: 'destaque',
   position: 2,
   published_at: hoursAgo(5)
 });
@@ -61,7 +63,8 @@ createNews({
   title: 'Alterações no trânsito central para o feriado',
   url: 'https://exemplo.com.br/transito-feriado',
   category: 'LOCAL',
-  highlight: 'normal',
+  image_url: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80',
+  highlight: 'destaque',
   position: 3,
   published_at: hoursAgo(8)
 });
@@ -70,6 +73,7 @@ createNews({
   title: 'Bate-papo exclusivo com o prefeito municipal',
   url: 'https://exemplo.com.br/entrevista-prefeito',
   category: 'ENTREVISTA',
+  image_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80',
   highlight: 'normal',
   invert: true,
   position: 4,
@@ -80,6 +84,7 @@ createNews({
   title: 'Time da cidade se prepara para a final do campeonato',
   url: 'https://exemplo.com.br/final-campeonato',
   category: 'ESPORTES',
+  image_url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80',
   highlight: 'normal',
   position: 5,
   published_at: hoursAgo(20)
