@@ -30,7 +30,20 @@
       throw new Error('Sessão expirada.');
     }
 
-    const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
+    // Resposta que não é JSON quase sempre significa rota inexistente — ou seja,
+    // servidor rodando código antigo depois de uma atualização de arquivos.
+    let data;
+    try {
+      data = response.status === 204 ? {} : JSON.parse((await response.text()) || '{}');
+    } catch {
+      const error = new Error(
+        `O servidor respondeu ${response.status} sem dados. Se você acabou de atualizar ` +
+          'os arquivos do projeto, pare o servidor e inicie de novo (Ctrl+C e depois npm start).'
+      );
+      error.hint = '';
+      throw error;
+    }
+
     if (!response.ok) {
       const error = new Error(data.error || 'Não foi possível concluir a operação.');
       error.hint = data.hint || '';
