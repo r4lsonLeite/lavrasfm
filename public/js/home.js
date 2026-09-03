@@ -152,7 +152,7 @@
                  class="absolute inset-0 w-full h-full group" aria-label="Assistir: ${escapeHtml(video.title)}">
            <img class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                 src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy"
-                onerror="this.src='https://i.ytimg.com/vi/${escapeHtml(video.youtube_id)}/hqdefault.jpg'">
+                data-fallback="https://i.ytimg.com/vi/${escapeHtml(video.youtube_id)}/hqdefault.jpg">
            <span class="absolute inset-0 flex items-center justify-center">
              <span class="w-16 h-16 bg-primary text-on-primary rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform">
                <span class="material-symbols-outlined text-[32px]">play_arrow</span>
@@ -228,6 +228,24 @@
     window.LavrasPlayer?.setStreamUrl(settings.stream_url);
   }
 
+  /**
+   * Nem todo vídeo do YouTube tem capa em resolução máxima; quando faltar,
+   * caímos para a versão menor. Fica aqui, e não num onerror no HTML, para a
+   * política de segurança da página poder proibir script inline.
+   */
+  function wireThumbFallbacks(root) {
+    root.querySelectorAll('img[data-fallback]').forEach((img) => {
+      img.addEventListener(
+        'error',
+        () => {
+          const alternativa = img.dataset.fallback;
+          if (alternativa && img.src !== alternativa) img.src = alternativa;
+        },
+        { once: true }
+      );
+    });
+  }
+
   // Troca a capa pelo iframe do YouTube quando o visitante clica em play.
   function wireVideoEmbeds(root) {
     root.querySelectorAll('[data-video-embed]').forEach((button) => {
@@ -270,6 +288,7 @@
       : emptyState('Nenhum vídeo ou live cadastrado ainda.');
 
     wireVideoEmbeds(videoSlot);
+    wireThumbFallbacks(videoSlot);
   }
 
   document.addEventListener('DOMContentLoaded', load);

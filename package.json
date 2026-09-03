@@ -10,9 +10,17 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "seed": "node server/seed.js"
+    "seed": "node server/seed.js",
+    "build:css": "tailwindcss -c tailwind.config.cjs -i src/tailwind.css -o public/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -c tailwind.config.cjs -i src/tailwind.css -o public/css/tailwind.css --watch",
+    "build": "npm run build:css",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
+    "compression": "^1.8.1",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
   }
 }

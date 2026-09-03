@@ -6,3 +6,6 @@ data/
 .env
 .DS_Store
 npm-debug.log*
+
+# O CSS compilado vai para o repositório, para o deploy não depender de build.
+!public/css/tailwind.css

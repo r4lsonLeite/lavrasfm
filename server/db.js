@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = process.env.DB_PATH
+export const DB_PATH = process.env.DB_PATH
   ? resolve(process.env.DB_PATH)
   : resolve(__dirname, '..', 'data', 'lavrasfm.db');
 

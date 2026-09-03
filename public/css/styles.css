@@ -20,6 +20,21 @@
 .is-playing .eq-bar {
   animation: eq-pulse 900ms ease-in-out infinite;
 }
+
+/* O atraso de cada barra vem daqui, e não de um atributo style inline —
+   assim a política de segurança da página pode proibir estilo inline. */
+.eq-bar:nth-child(1)  { animation-delay: 0ms; }
+.eq-bar:nth-child(2)  { animation-delay: 90ms; }
+.eq-bar:nth-child(3)  { animation-delay: 180ms; }
+.eq-bar:nth-child(4)  { animation-delay: 270ms; }
+.eq-bar:nth-child(5)  { animation-delay: 360ms; }
+.eq-bar:nth-child(6)  { animation-delay: 450ms; }
+.eq-bar:nth-child(7)  { animation-delay: 540ms; }
+.eq-bar:nth-child(8)  { animation-delay: 630ms; }
+.eq-bar:nth-child(9)  { animation-delay: 720ms; }
+.eq-bar:nth-child(10) { animation-delay: 810ms; }
+.eq-bar:nth-child(11) { animation-delay: 900ms; }
+.eq-bar:nth-child(12) { animation-delay: 990ms; }
 @keyframes eq-pulse {
   0%, 100% { height: 6px; opacity: 0.5; }
   50%      { height: 22px; opacity: 1; }

@@ -5,11 +5,11 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Entrar — Painel LavrasFM</title>
 <meta name="robots" content="noindex">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script src="/js/theme.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="/css/tailwind.css" rel="stylesheet">
 <link href="/css/styles.css" rel="stylesheet">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body class="bg-background text-on-background font-body-md min-h-screen flex items-center justify-center px-margin-mobile">
 
@@ -45,31 +45,6 @@
   </p>
 </main>
 
-<script>
-  const form = document.getElementById('login-form');
-  const error = document.getElementById('error');
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const button = form.querySelector('button[type=submit]');
-    button.disabled = true;
-    error.classList.add('hidden');
-
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.fromEntries(new FormData(form)))
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Não foi possível entrar.');
-      window.location.href = '/admin';
-    } catch (err) {
-      error.textContent = err.message;
-      error.classList.remove('hidden');
-      button.disabled = false;
-    }
-  });
-</script>
+<script src="/js/login.js"></script>
 </body>
 </html>

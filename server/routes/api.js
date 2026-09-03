@@ -53,6 +53,23 @@ api.get('/site', (_req, res) => {
 api.get('/news', (_req, res) => res.json({ news: listNews() }));
 api.get('/videos', (_req, res) => res.json({ videos: listVideos() }));
 /**
+ * Ouvintes conectados à retransmissão. Guardamos os controladores para poder
+ * encerrar todos de uma vez quando o servidor for desligado.
+ */
+const ouvintes = new Set();
+
+/** Teto de ouvintes simultâneos: cada um consome uma conexão de saída. */
+const MAX_OUVINTES = Number(process.env.MAX_RELAY_LISTENERS) || 50;
+
+/** Encerra as retransmissões em curso (usado no desligamento gracioso). */
+export function encerrarRetransmissoes() {
+  for (const controller of ouvintes) controller.abort();
+  ouvintes.clear();
+}
+
+export const contarOuvintes = () => ouvintes.size;
+
+/**
  * Retransmite o áudio da rádio pelo próprio servidor. Serve para streams em
  * http (bloqueados dentro de um site https) e para servidores sem CORS.
  * Só funciona quando a opção está ligada no painel.
@@ -63,8 +80,21 @@ api.get('/stream', async (req, res) => {
     return res.status(404).json({ error: 'Retransmissão desativada.' });
   }
 
+  if (ouvintes.size >= MAX_OUVINTES) {
+    res.setHeader('Retry-After', '30');
+    return res.status(503).json({
+      error: 'A retransmissão atingiu o limite de ouvintes simultâneos. Tente de novo em instantes.'
+    });
+  }
+
   const upstream = new AbortController();
-  req.on('close', () => upstream.abort());
+  ouvintes.add(upstream);
+  const soltar = () => {
+    ouvintes.delete(upstream);
+    upstream.abort();
+  };
+  req.on('close', soltar);
+  res.on('close', soltar);
 
   try {
     const response = await fetch(settings.stream_url, {
@@ -93,6 +123,8 @@ api.get('/stream', async (req, res) => {
     } else {
       res.end();
     }
+  } finally {
+    ouvintes.delete(upstream);
   }
 });
 
