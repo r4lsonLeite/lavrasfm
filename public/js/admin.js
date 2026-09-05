@@ -451,6 +451,16 @@
         linhas.push(`Extraí o endereço de dentro da playlist: <strong>${escapeHtml(data.url)}</strong>`);
       }
       linhas.push(escapeHtml(data.probe.message));
+      if (data.probe.contentType) {
+        linhas.push(`Tipo informado pelo servidor: <code>${escapeHtml(data.probe.contentType)}</code>`);
+      }
+      if (data.probe.tipoConfundeNavegador) {
+        linhas.push(
+          '<strong>Atenção:</strong> esse tipo não é reconhecido como áudio pelo navegador — ' +
+            'ao abrir o endereço, ele oferece baixar um arquivo em vez de tocar. ' +
+            'Marque <strong>"Retransmitir pelo servidor"</strong> abaixo: a retransmissão corrige o tipo e o áudio passa a tocar.'
+        );
+      }
       if (data.probe.insecure) {
         linhas.push(
           'Atenção: essa transmissão é <strong>http</strong>. Em um site https o navegador bloqueia — ' +

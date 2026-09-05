@@ -147,7 +147,14 @@ api.get('/stream', async (req, res) => {
       return res.status(502).json({ error: 'A transmissão não respondeu.' });
     }
 
-    res.setHeader('Content-Type', response.headers.get('content-type') || settings.stream_format);
+    // Muitos servidores de rádio anunciam o áudio como arquivo genérico
+    // (application/octet-stream) ou não informam tipo nenhum. O navegador
+    // então oferece download em vez de tocar. Aqui trocamos pelo formato
+    // configurado no painel, que é o que o <audio> espera.
+    const tipoOrigem = (response.headers.get('content-type') || '').toLowerCase();
+    const tipoServivel =
+      tipoOrigem.startsWith('audio/') || tipoOrigem.includes('mpegurl') || tipoOrigem.includes('ogg');
+    res.setHeader('Content-Type', tipoServivel ? tipoOrigem : settings.stream_format);
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Access-Control-Allow-Origin', '*');
 

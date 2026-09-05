@@ -163,14 +163,20 @@ export async function probeStream(streamUrl) {
     contentType.includes('ogg') ||
     contentType.includes('octet-stream');
 
+  // audio/* o navegador toca direto. octet-stream e afins ele costuma tratar
+  // como arquivo para baixar — a transmissão existe, mas não toca na página.
+  const tipoTocavel =
+    contentType.startsWith('audio/') || contentType.includes('mpegurl') || contentType.includes('ogg');
+
   return {
     ok: looksLikeAudio,
     message: looksLikeAudio
       ? `Transmissão respondendo${stationName ? ` — ${stationName}` : ''}.`
       : `Resposta inesperada (${contentType || 'sem content-type'}).`,
-    contentType,
+    contentType: contentType || null,
     stationName,
     // http dentro de um site https é bloqueado pelo navegador: aí o relay salva.
-    insecure: streamUrl.startsWith('http://')
+    insecure: streamUrl.startsWith('http://'),
+    tipoConfundeNavegador: looksLikeAudio && !tipoTocavel
   };
 }
