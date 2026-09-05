@@ -30,7 +30,18 @@ O layout segue o rascunho feito no Stitch (mesmas cores, tipografia e grade).
 ```bash
 npm install
 cp .env.example .env      # ajuste ADMIN_PASSWORD
+npm run build:css         # compila o CSS do Tailwind
 npm start
+```
+
+O `npm run build:css` só precisa rodar de novo quando alguma classe do Tailwind
+mudar no HTML ou no JavaScript. Durante o desenvolvimento, `npm run watch:css`
+recompila sozinho.
+
+Para rodar os testes:
+
+```bash
+npm test
 ```
 
 O site sobe em <http://localhost:3000> e o painel em <http://localhost:3000/admin>.
@@ -96,6 +107,8 @@ server/
   content.js    regras e validação de notícias e vídeos
   youtube.js    extração do ID do YouTube a partir da URL
   stream.js     resolve playlists .m3u/.pls/.asx e verifica a transmissão
+  backup.js     cópias de segurança rotativas do banco
+  log.js        registro de erros em arquivo
   routes/api.js API pública e API do painel
   seed.js       conteúdo de exemplo
 public/
@@ -112,6 +125,23 @@ public/
 O banco fica em `data/lavrasfm.db` (fora do Git). Para fazer backup, basta
 copiar essa pasta.
 
+## Operação
+
+**Backups.** O banco é copiado automaticamente para `data/backups/` na
+inicialização e a cada 24 horas, mantendo as 7 cópias mais recentes. As cópias
+são feitas com `VACUUM INTO`, que gera um arquivo íntegro mesmo com o site em
+uso. Para restaurar, pare o servidor e substitua `data/lavrasfm.db` pela cópia.
+
+**Erros.** Ficam registrados em `data/logs/erros.log`, com rotação aos 5 MB.
+
+**Limite de ouvintes.** A retransmissão aceita 50 ouvintes simultâneos por
+padrão (`MAX_RELAY_LISTENERS`). Acima disso, novos ouvintes recebem 503 em vez
+de derrubar o servidor. Se a transmissão tocar direto, mantenha a retransmissão
+desligada e esse limite deixa de importar.
+
+**Reinícios.** O servidor trata `SIGTERM` e `SIGINT`: para de aceitar conexões,
+encerra as retransmissões e fecha o banco antes de sair.
+
 ## Deploy
 
 Qualquer host que rode Node 22.5+ serve. Em produção:
@@ -126,10 +156,13 @@ limite de tentativas de login enxergue o IP real do visitante.
 
 ## Notas técnicas
 
-- **Tailwind via CDN**: mantido como no rascunho, para editar o visual sem
-  build. Se quiser um site mais leve e independente de rede, compile o CSS com
-  o Tailwind CLI e troque o `<script>` do CDN por um `<link>` para o arquivo
-  gerado.
+- **Tailwind compilado**: o CSS sai de `src/tailwind.css` para
+  `public/css/tailwind.css` (16 KB, contra ~400 KB do CDN). O tema — cores,
+  tipografia, espaçamentos — vive em `public/js/theme.js`, que o
+  `tailwind.config.cjs` lê, para não haver duas listas de cores.
+- **Política de segurança de conteúdo**: estrita, sem script nem estilo inline.
+  Ao editar as páginas, não use atributos `style=` nem `onclick=` — o navegador
+  os bloqueia. Use classes e `addEventListener`.
 - **Sessões**: cookie `httpOnly` + `SameSite=Lax`, válido por 7 dias. Trocar a
   senha encerra as demais sessões.
 - **Segurança dos formulários**: só links `http`/`https` são aceitos e todo

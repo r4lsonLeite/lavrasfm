@@ -3,12 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>LavrasFM — Rádio ao vivo</title>
-<meta name="description" content="LavrasFM: rádio ao vivo, notícias e vídeos de Lavras e região.">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script src="/js/theme.js"></script>
+<title>{{STATION_NAME}} — Rádio ao vivo</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<link rel="canonical" href="{{SITE_URL}}/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#000000">
+
+<!-- Prévia ao compartilhar no WhatsApp, Facebook, X e afins -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{STATION_NAME}}">
+<meta property="og:title" content="{{STATION_NAME}} — Rádio ao vivo">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:url" content="{{SITE_URL}}/">
+<meta property="og:image" content="{{SITE_URL}}/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="/css/tailwind.css" rel="stylesheet">
 <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-background text-on-background font-body-md min-h-screen flex flex-col pb-24">
@@ -74,18 +88,18 @@
     </div>
 
     <div class="flex-grow items-center gap-1 h-8 text-primary hidden md:flex" data-equalizer>
-      <span class="eq-bar" style="animation-delay:0ms"></span>
-      <span class="eq-bar" style="animation-delay:90ms"></span>
-      <span class="eq-bar" style="animation-delay:180ms"></span>
-      <span class="eq-bar" style="animation-delay:270ms"></span>
-      <span class="eq-bar" style="animation-delay:360ms"></span>
-      <span class="eq-bar" style="animation-delay:450ms"></span>
-      <span class="eq-bar" style="animation-delay:540ms"></span>
-      <span class="eq-bar" style="animation-delay:630ms"></span>
-      <span class="eq-bar" style="animation-delay:720ms"></span>
-      <span class="eq-bar" style="animation-delay:810ms"></span>
-      <span class="eq-bar" style="animation-delay:900ms"></span>
-      <span class="eq-bar" style="animation-delay:990ms"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
+      <span class="eq-bar"></span>
     </div>
 
     <div class="flex items-center gap-3 shrink-0">
