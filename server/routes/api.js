@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { resolveStreamUrl, probeStream, StreamError } from '../stream.js';
+import { lerArtigo, ArtigoError } from '../artigo.js';
 import { getSettings, saveSettings, DEFAULT_SETTINGS, DB_PATH } from '../db.js';
 import {
   HIGHLIGHTS,
@@ -236,6 +237,15 @@ admin.get('/options', (_req, res) =>
   res.json({ highlights: HIGHLIGHTS, videoKinds: VIDEO_KINDS, settingKeys: Object.keys(DEFAULT_SETTINGS) })
 );
 
+/** Lê título, resumo, foto e fonte direto da página da notícia. */
+admin.post('/news/preview', async (req, res, next) => {
+  try {
+    res.json({ artigo: await lerArtigo(req.body?.url) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 admin.get('/news', (_req, res) => res.json({ news: listNews({ includeInactive: true }) }));
 admin.post('/news', (req, res) => res.status(201).json({ item: createNews(req.body) }));
 
@@ -308,6 +318,9 @@ api.use('/admin', admin);
 
 // Erros de validação viram 400 com mensagem legível; o resto vira 500.
 api.use((err, _req, res, _next) => {
+  if (err instanceof ArtigoError || err?.name === 'ArtigoError') {
+    return res.status(400).json({ error: err.message });
+  }
   if (err instanceof StreamError || err?.name === 'StreamError') {
     return res.status(400).json({ error: err.message, hint: err.hint || '' });
   }

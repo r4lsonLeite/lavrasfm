@@ -196,6 +196,8 @@
 
   function resetNewsForm() {
     newsForm.reset();
+    $('#buscar-resultado').classList.add('hidden');
+    $('#imagem-previa').classList.add('hidden');
     newsForm.elements.id.value = '';
     newsForm.elements.active.checked = true;
     $('#news-form-title').textContent = 'Nova notícia';
@@ -223,6 +225,103 @@
   });
 
   $('#news-reset').addEventListener('click', resetNewsForm);
+
+  /**
+   * Busca os dados da notícia na própria página do portal. Portais publicam
+   * título, resumo e foto em metatags — as mesmas que geram a prévia de um
+   * link no WhatsApp —, então dá para preencher o formulário a partir do link
+   * em vez de copiar campo por campo.
+   */
+  $('#buscar-noticia').addEventListener('click', async () => {
+    const botao = $('#buscar-noticia');
+    const caixa = $('#buscar-resultado');
+    const campoUrl = newsForm.elements.url;
+
+    const mostrar = (texto, kind) => {
+      caixa.textContent = texto;
+      caixa.className =
+        'font-label-sm text-label-sm px-4 py-3 rounded-DEFAULT ' +
+        (kind === 'error'
+          ? 'bg-error-container text-on-error-container'
+          : 'bg-surface-container text-on-surface');
+    };
+
+    botao.disabled = true;
+    mostrar('Buscando…', 'ok');
+
+    try {
+      const { artigo } = await api('/admin/news/preview', {
+        method: 'POST',
+        body: { url: campoUrl.value }
+      });
+
+      campoUrl.value = artigo.url;
+
+      // Só preenchemos campo vazio: o que o responsável escreveu tem prioridade.
+      const preenchidos = [];
+      for (const [campo, rotulo] of [
+        ['title', 'título'],
+        ['excerpt', 'resumo'],
+        ['image_url', 'foto'],
+        ['source', 'fonte']
+      ]) {
+        if (artigo[campo] && !newsForm.elements[campo].value.trim()) {
+          newsForm.elements[campo].value = artigo[campo];
+          preenchidos.push(rotulo);
+        }
+      }
+
+      if (artigo.published_at && !newsForm.elements.published_at.value) {
+        const data = toLocalInput(artigo.published_at.replace('T', ' ').slice(0, 19));
+        if (data) {
+          newsForm.elements.published_at.value = data;
+          preenchidos.push('data');
+        }
+      }
+
+      mostrarPreviaImagem();
+
+      mostrar(
+        preenchidos.length
+          ? `Preenchi: ${preenchidos.join(', ')}. Confira e ajuste o que quiser.`
+          : 'Não achei nada novo — os campos já estavam preenchidos.',
+        'ok'
+      );
+    } catch (error) {
+      mostrar(error.message, 'error');
+    } finally {
+      botao.disabled = false;
+    }
+  });
+
+  /** Mostra a foto informada, para o responsável ver se o link está certo. */
+  function mostrarPreviaImagem() {
+    const caixa = $('#imagem-previa');
+    const img = $('#imagem-previa-img');
+    const valor = newsForm.elements.image_url.value.trim();
+
+    if (!valor) {
+      caixa.classList.add('hidden');
+      $('#imagem-aviso').classList.add('hidden');
+      return;
+    }
+    $('#imagem-aviso').classList.add('hidden');
+    img.src = valor;
+    caixa.classList.remove('hidden');
+  }
+
+  newsForm.elements.image_url.addEventListener('input', mostrarPreviaImagem);
+
+  // O aviso da foto tem lugar próprio: antes ele apagava o resultado da busca.
+  $('#imagem-previa-img').addEventListener('error', () => {
+    const aviso = $('#imagem-aviso');
+    aviso.textContent =
+      'Essa foto não carregou. O endereço precisa ser o da imagem em si (termina em .jpg, .png ou .webp), não o link da matéria.';
+    aviso.classList.remove('hidden');
+  });
+  $('#imagem-previa-img').addEventListener('load', () => {
+    $('#imagem-aviso').classList.add('hidden');
+  });
 
   $('#news-list').addEventListener('click', async (event) => {
     const button = event.target.closest('button[data-action]');

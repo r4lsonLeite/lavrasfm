@@ -11,8 +11,10 @@ O layout segue o rascunho feito no Stitch (mesmas cores, tipografia e grade).
   volume e mudo (com preferência salva no navegador), atalho de teclado
   (espaço ou `K`) e reconexão automática com backoff quando o streaming cai.
 - **Painel administrativo** em `/admin`, protegido por login.
-  - **Notícias**: o responsável cola o link da matéria, escreve título/resumo e
-    escolhe como destacar — **manchete** (chamada grande com foto larga),
+  - **Notícias**: o responsável cola o link da matéria e clica em *Buscar
+    título, resumo e foto* — o servidor lê esses dados da própria página do
+    portal, como o WhatsApp faz ao montar a prévia de um link. Depois escolhe
+    como destacar — **manchete** (chamada grande com foto larga),
     **destaque lateral** (coluna de três ao lado da manchete) ou **grade**
     (cards menores abaixo) —, com ordem manual e publicar/despublicar.
   - **Vídeos & Lives**: cola o link do YouTube (aceita `watch?v=`, `youtu.be`,
@@ -120,6 +122,7 @@ server/
   content.js    regras e validação de notícias e vídeos
   youtube.js    extração do ID do YouTube a partir da URL
   stream.js     resolve playlists .m3u/.pls/.asx e verifica a transmissão
+  artigo.js     lê título, resumo e foto de uma notícia pelo link
   backup.js     cópias de segurança rotativas do banco
   log.js        registro de erros em arquivo
   routes/api.js API pública e API do painel

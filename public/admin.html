@@ -65,6 +65,18 @@
           <span class="font-label-sm text-label-sm text-on-surface-variant">O card leva o visitante direto para esse endereço.</span>
         </label>
 
+        <button type="button" id="buscar-noticia"
+                class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">download</span> Buscar título, resumo e foto
+        </button>
+        <div id="buscar-resultado" class="hidden font-label-sm text-label-sm px-4 py-3 rounded-DEFAULT"></div>
+
+        <div id="imagem-previa" class="hidden flex flex-col gap-2">
+          <img id="imagem-previa-img" alt="Prévia da foto da notícia"
+               class="w-full h-32 object-cover rounded-DEFAULT border border-outline-variant">
+          <p id="imagem-aviso" class="hidden font-label-sm text-label-sm px-3 py-2 rounded-DEFAULT bg-error-container text-on-error-container"></p>
+        </div>
+
         <label class="flex flex-col gap-1">
           <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Título *</span>
           <input name="title" required maxlength="300"
