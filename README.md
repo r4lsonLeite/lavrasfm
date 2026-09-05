@@ -52,6 +52,19 @@ Para ver o layout preenchido com conteúdo de exemplo:
 npm run seed
 ```
 
+### Esqueci a senha do painel
+
+As senhas são guardadas como hash scrypt e não há como recuperá-las — só
+redefinir:
+
+```bash
+npm run senha                      # sorteia uma senha e mostra na tela
+npm run senha -- minha-senha-123   # define a que você escolher
+```
+
+O comando encerra as sessões abertas do usuário. Rode com o servidor parado ou
+reinicie depois.
+
 ### Primeiro acesso
 
 O usuário `admin` é criado automaticamente. Se `ADMIN_PASSWORD` não estiver
@@ -144,15 +157,41 @@ encerra as retransmissões e fecha o banco antes de sair.
 
 ## Deploy
 
-Qualquer host que rode Node 22.5+ serve. Em produção:
+O site precisa de um servidor que fique ligado o tempo todo, aguente conexões
+de áudio longas e tenha um disco que sobreviva aos deploys. Isso descarta
+plataformas sem estado, como Vercel e Netlify.
+
+### Render (configuração pronta)
+
+O `render.yaml` na raiz descreve o serviço inteiro. No Render, crie um
+*Blueprint* apontando para este repositório: ele lê o arquivo e monta tudo,
+inclusive o disco de 1 GB montado em `/var/dados`, onde ficam banco, backups e
+logs.
+
+Duas variáveis precisam ser preenchidas à mão no painel, porque são segredos e
+não vão para o Git:
+
+| Variável | O que colocar |
+| --- | --- |
+| `ADMIN_PASSWORD` | a senha do painel, longa e só sua |
+| `SITE_URL` | o endereço final, ex. `https://lavrasfm.com.br` |
+
+### Qualquer outro servidor
+
+Serve qualquer host com Node 22.5+:
 
 ```bash
-NODE_ENV=production TRUST_PROXY=1 ADMIN_PASSWORD='...' npm start
+NODE_ENV=production TRUST_PROXY=1 ADMIN_PASSWORD='...' \
+  DB_PATH=/caminho/persistente/lavrasfm.db npm start
 ```
 
 `NODE_ENV=production` faz o cookie de sessão ser marcado como `secure`, e
 `TRUST_PROXY=1` é necessário atrás de nginx, Caddy ou Cloudflare para que o
-limite de tentativas de login enxergue o IP real do visitante.
+limite de tentativas de login enxergue o IP real do visitante. Aponte `DB_PATH`
+para fora da pasta do código, senão um deploy novo apaga o banco.
+
+O endereço `/api/health` responde com um sinal de vida, para a hospedagem saber
+se precisa reiniciar o serviço.
 
 ## Notas técnicas
 

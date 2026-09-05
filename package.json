@@ -14,7 +14,8 @@
     "build:css": "tailwindcss -c tailwind.config.cjs -i src/tailwind.css -o public/css/tailwind.css --minify",
     "watch:css": "tailwindcss -c tailwind.config.cjs -i src/tailwind.css -o public/css/tailwind.css --watch",
     "build": "npm run build:css",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "senha": "node server/senha.js"
   },
   "dependencies": {
     "compression": "^1.8.1",

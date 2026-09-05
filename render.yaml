@@ -1,0 +1,41 @@
+# Configuração de deploy no Render.
+#
+# Ao criar um "Blueprint" apontando para este repositório, o Render lê este
+# arquivo e monta o serviço sozinho — inclusive o disco onde o banco de dados
+# fica guardado, que é o que impede as notícias de sumirem a cada reinício.
+services:
+  - type: web
+    name: lavrasfm
+    runtime: node
+    plan: starter          # o plano gratuito desliga o site e apaga o disco
+    region: oregon
+    buildCommand: npm ci --include=dev && npm run build:css
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    # O banco vive no disco permanente, fora da pasta do código: um deploy novo
+    # substitui o código, mas não toca no disco.
+    disk:
+      name: dados
+      mountPath: /var/dados
+      sizeGB: 1
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: '1'
+      - key: DB_PATH
+        value: /var/dados/lavrasfm.db
+      - key: BACKUP_DIR
+        value: /var/dados/backups
+      - key: LOG_DIR
+        value: /var/dados/logs
+      - key: NODE_VERSION
+        value: '22'
+      # Definidas no painel do Render, não aqui — segredos não vão para o Git.
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SITE_URL
+        sync: false

@@ -50,6 +50,15 @@ api.get('/site', (_req, res) => {
   });
 });
 
+/** Sinal de vida para a hospedagem saber se deve reiniciar o serviço. */
+api.get('/health', (_req, res) => {
+  res.json({
+    ok: true,
+    uptime_s: Math.round(process.uptime()),
+    ouvintes: contarOuvintes()
+  });
+});
+
 api.get('/news', (_req, res) => res.json({ news: listNews() }));
 api.get('/videos', (_req, res) => res.json({ videos: listVideos() }));
 /**
