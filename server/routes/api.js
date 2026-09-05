@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import { statSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { resolveStreamUrl, probeStream, StreamError } from '../stream.js';
-import { getSettings, saveSettings, DEFAULT_SETTINGS } from '../db.js';
+import { getSettings, saveSettings, DEFAULT_SETTINGS, DB_PATH } from '../db.js';
 import {
   HIGHLIGHTS,
   VIDEO_KINDS,
@@ -50,14 +52,44 @@ api.get('/site', (_req, res) => {
   });
 });
 
-/** Sinal de vida para a hospedagem saber se deve reiniciar o serviço. */
+/**
+ * Sinal de vida para a hospedagem saber se deve reiniciar o serviço.
+ *
+ * Informa também se o banco está num disco permanente. Num serviço em nuvem,
+ * o disco do container é apagado a cada deploy: se o banco estiver nele, todo
+ * o conteúdo cadastrado some sem aviso. Saber disso pela própria página evita
+ * ter que caçar a informação no painel da hospedagem.
+ */
 api.get('/health', (_req, res) => {
   res.json({
     ok: true,
     uptime_s: Math.round(process.uptime()),
-    ouvintes: contarOuvintes()
+    ouvintes: contarOuvintes(),
+    armazenamento: descreverArmazenamento()
   });
 });
+
+/**
+ * Um disco montado aparece como dispositivo diferente do diretório que o
+ * contém. É assim que dá para distinguir um volume de verdade de uma pasta
+ * comum dentro do container.
+ */
+function descreverArmazenamento() {
+  const pasta = dirname(DB_PATH);
+  try {
+    const aqui = statSync(pasta);
+    const acima = statSync(dirname(pasta));
+    return aqui.dev !== acima.dev
+      ? { permanente: true, aviso: null }
+      : {
+          permanente: false,
+          aviso:
+            'O banco está no disco temporário do container: tudo que for cadastrado será apagado no próximo deploy.'
+        };
+  } catch {
+    return { permanente: false, aviso: 'Não consegui verificar onde o banco está guardado.' };
+  }
+}
 
 api.get('/news', (_req, res) => res.json({ news: listNews() }));
 api.get('/videos', (_req, res) => res.json({ videos: listVideos() }));
