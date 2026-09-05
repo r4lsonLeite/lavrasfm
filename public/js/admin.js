@@ -479,27 +479,41 @@
   });
 
   /**
-   * Testa o streaming no navegador e confirma que o áudio está mesmo saindo.
+   * Testa a transmissão e mede o nível do som.
    *
-   * `play()` resolver não significa que há som: o navegador aceita o comando
-   * antes de saber se consegue decodificar o fluxo. Por isso, esperamos o
-   * relógio do áudio avançar e conferimos volume e mudo, que são a causa mais
-   * comum de "diz que está tocando, mas não sai nada".
+   * `play()` resolver não significa que há som, e "o navegador diz que está
+   * tocando" também não: uma transmissão pode estar no ar transmitindo
+   * silêncio. Por isso analisamos a forma de onda e informamos o nível real.
+   *
+   * A análise só é permitida quando o áudio vem da mesma origem da página —
+   * por isso a prévia passa pelo servidor, em /api/admin/stream/preview.
    */
   let testAudio;
   let testTimer;
+  let testContexto;
 
-  $('#test-stream').addEventListener('click', () => {
+  function pararTeste() {
+    clearTimeout(testTimer);
+    if (testAudio) {
+      testAudio.pause();
+      testAudio.removeAttribute('src');
+      testAudio.load();
+    }
+    if (testContexto) {
+      testContexto.close().catch(() => {});
+      testContexto = null;
+    }
+  }
+
+  $('#test-stream').addEventListener('click', async () => {
     const status = $('#stream-status');
     const url = settingsForm.elements.stream_url.value.trim();
-
-    const dizer = (texto) => {
-      status.textContent = texto;
+    const dizer = (html) => {
+      status.innerHTML = html;
     };
 
     if (testAudio && !testAudio.paused) {
-      clearTimeout(testTimer);
-      testAudio.pause();
+      pararTeste();
       dizer('Teste interrompido.');
       return;
     }
@@ -509,55 +523,100 @@
     }
 
     dizer('Conectando…');
-    testAudio = new Audio(url);
+    pararTeste();
+
+    testAudio = new Audio(`/api/admin/stream/preview?url=${encodeURIComponent(url)}`);
     testAudio.volume = 1;
     testAudio.muted = false;
 
     testAudio.addEventListener('error', () => {
-      // Uma queda passageira de conexão dispara este evento mesmo com o áudio
-      // tocando normalmente; só é falha de verdade se nada estiver saindo.
+      // Uma queda passageira dispara este evento mesmo com o áudio tocando.
       if (!testAudio.paused && testAudio.currentTime > 0) return;
-
       clearTimeout(testTimer);
-      const codigo = testAudio.error?.code;
       dizer(
-        codigo === 4
-          ? 'O navegador não consegue tocar esse formato de áudio. Confira com quem hospeda a transmissão qual o formato (MP3, AAC, OGG).'
-          : 'Não consegui tocar essa URL. Verifique o endereço, o https e o CORS do servidor.'
+        testAudio.error?.code === 4
+          ? 'O navegador não consegue tocar esse formato. Confira com quem hospeda a transmissão qual o formato (MP3, AAC, OGG).'
+          : 'Não consegui tocar essa URL. Verifique o endereço no campo acima.'
       );
     });
 
-    testAudio.play().then(
-      () => {
-        dizer('Conectado. Conferindo se o áudio está saindo…');
+    let medirPico = () => 0;
+    try {
+      const Contexto = window.AudioContext || window.webkitAudioContext;
+      testContexto = new Contexto();
+      const fonte = testContexto.createMediaElementSource(testAudio);
+      const analisador = testContexto.createAnalyser();
+      analisador.fftSize = 2048;
+      fonte.connect(analisador);
+      analisador.connect(testContexto.destination); // mantém o som audível
+      const amostras = new Float32Array(analisador.fftSize);
 
-        // Se o relógio não anda, chegou dado mas nada está sendo decodificado.
-        testTimer = setTimeout(() => {
-          if (testAudio.paused) return;
+      medirPico = () => {
+        analisador.getFloatTimeDomainData(amostras);
+        let pico = 0;
+        for (const v of amostras) pico = Math.max(pico, Math.abs(v));
+        return pico;
+      };
+    } catch {
+      // Sem análise: seguimos com o teste simples, sem medir o nível.
+    }
 
-          if (testAudio.currentTime > 0) {
-            const silencioso = testAudio.muted || testAudio.volume === 0;
-            dizer(
-              silencioso
-                ? 'O áudio está tocando, mas sem som: o navegador está com esta aba no mudo. Clique com o botão direito na aba e escolha "Reativar som do site".'
-                : 'Tocando — o áudio está saindo. Se você não ouve nada, verifique o volume do computador e se a aba do navegador está muda. Clique de novo para parar.'
-            );
-          } else {
-            dizer(
-              'O navegador conectou, mas nenhum áudio foi decodificado em 3 segundos. ' +
-                'Isso costuma ser formato incompatível ou transmissão fora do ar no momento.'
-            );
-          }
-        }, 3000);
-      },
-      (error) => {
+    try {
+      await testAudio.play();
+    } catch (error) {
+      dizer(
+        error?.name === 'NotAllowedError'
+          ? 'O navegador bloqueou a reprodução. Clique novamente.'
+          : 'Não consegui tocar essa URL. Verifique o endereço no campo acima.'
+      );
+      return;
+    }
+
+    dizer('Conectado. Medindo o nível do áudio…');
+
+    // Acompanha o pico por alguns segundos: um instante de silêncio numa
+    // música é normal, silêncio absoluto durante todo o período não é.
+    let picoGeral = 0;
+    const inicio = Date.now();
+    const amostrar = setInterval(() => {
+      picoGeral = Math.max(picoGeral, medirPico());
+    }, 100);
+
+    testTimer = setTimeout(() => {
+      clearInterval(amostrar);
+      if (testAudio.paused) return;
+
+      if (testAudio.currentTime === 0) {
         dizer(
-          error?.name === 'NotAllowedError'
-            ? 'O navegador bloqueou a reprodução automática. Clique novamente.'
-            : 'Não consegui tocar essa URL. Verifique o endereço, o https e o CORS do servidor.'
+          'O navegador conectou, mas nenhum áudio foi decodificado em 5 segundos. ' +
+            'Isso costuma ser formato incompatível ou transmissão fora do ar.'
+        );
+        return;
+      }
+
+      const nivel = Math.round(picoGeral * 100);
+
+      if (picoGeral < 0.01) {
+        dizer(
+          '<strong>A transmissão está no ar, mas em silêncio.</strong><br>' +
+            `Recebi ${testAudio.currentTime.toFixed(1)} segundos de áudio e o nível ficou em ${nivel}%. ` +
+            'O problema não é o site nem o seu computador: é a transmissão da rádio que não está com som. ' +
+            'Confirme com quem opera o estúdio se está no ar.'
+        );
+      } else if (testAudio.muted || testAudio.volume === 0) {
+        dizer(
+          `<strong>Há som na transmissão (nível ${nivel}%), mas esta aba está no mudo.</strong><br>` +
+            'Clique com o botão direito na aba do navegador e escolha "Reativar som do site".'
+        );
+      } else {
+        dizer(
+          `<strong>A transmissão tem som — nível ${nivel}%.</strong><br>` +
+            'Se você não está ouvindo, o bloqueio é no computador: confira o volume do Windows, ' +
+            'o Misturador de Volume (o Chrome pode estar zerado nele) e se a saída de som está no ' +
+            'dispositivo certo. Clique de novo para parar.'
         );
       }
-    );
+    }, 5000);
   });
 
   /* ---------------------------------- conta --------------------------------- */

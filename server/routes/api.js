@@ -115,19 +115,12 @@ export const contarOuvintes = () => ouvintes.size;
  * http (bloqueados dentro de um site https) e para servidores sem CORS.
  * Só funciona quando a opção está ligada no painel.
  */
-api.get('/stream', async (req, res) => {
-  const settings = getSettings();
-  if (settings.stream_relay !== '1' || !settings.stream_url) {
-    return res.status(404).json({ error: 'Retransmissão desativada.' });
-  }
-
-  if (ouvintes.size >= MAX_OUVINTES) {
-    res.setHeader('Retry-After', '30');
-    return res.status(503).json({
-      error: 'A retransmissão atingiu o limite de ouvintes simultâneos. Tente de novo em instantes.'
-    });
-  }
-
+/**
+ * Encaminha o áudio de `origem` para o cliente. Usado tanto pela retransmissão
+ * pública quanto pela prévia do painel, que precisa da mesma origem do site
+ * para o navegador conseguir medir o nível do som.
+ */
+async function encaminharAudio(origem, formatoPadrao, req, res) {
   const upstream = new AbortController();
   ouvintes.add(upstream);
   const soltar = () => {
@@ -138,7 +131,7 @@ api.get('/stream', async (req, res) => {
   res.on('close', soltar);
 
   try {
-    const response = await fetch(settings.stream_url, {
+    const response = await fetch(origem, {
       headers: { 'User-Agent': 'LavrasFM/1.0' },
       signal: upstream.signal,
       redirect: 'follow'
@@ -148,13 +141,12 @@ api.get('/stream', async (req, res) => {
     }
 
     // Muitos servidores de rádio anunciam o áudio como arquivo genérico
-    // (application/octet-stream) ou não informam tipo nenhum. O navegador
-    // então oferece download em vez de tocar. Aqui trocamos pelo formato
-    // configurado no painel, que é o que o <audio> espera.
+    // (application/octet-stream) ou não informam tipo nenhum. Trocamos pelo
+    // formato configurado, que é o que o <audio> espera.
     const tipoOrigem = (response.headers.get('content-type') || '').toLowerCase();
     const tipoServivel =
       tipoOrigem.startsWith('audio/') || tipoOrigem.includes('mpegurl') || tipoOrigem.includes('ogg');
-    res.setHeader('Content-Type', tipoServivel ? tipoOrigem : settings.stream_format);
+    res.setHeader('Content-Type', tipoServivel ? tipoOrigem : formatoPadrao);
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -174,6 +166,22 @@ api.get('/stream', async (req, res) => {
   } finally {
     ouvintes.delete(upstream);
   }
+}
+
+api.get('/stream', async (req, res) => {
+  const settings = getSettings();
+  if (settings.stream_relay !== '1' || !settings.stream_url) {
+    return res.status(404).json({ error: 'Retransmissão desativada.' });
+  }
+
+  if (ouvintes.size >= MAX_OUVINTES) {
+    res.setHeader('Retry-After', '30');
+    return res.status(503).json({
+      error: 'A retransmissão atingiu o limite de ouvintes simultâneos. Tente de novo em instantes.'
+    });
+  }
+
+  await encaminharAudio(settings.stream_url, settings.stream_format, req, res);
 });
 
 api.get('/now-playing', (_req, res) => {
@@ -272,6 +280,22 @@ admin.post('/stream/resolve', async (req, res, next) => {
     const resolved = await resolveStreamUrl(req.body?.url);
     const probe = await probeStream(resolved.url);
     res.json({ ...resolved, probe });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Prévia da transmissão servida pela mesma origem do site.
+ *
+ * O navegador só permite analisar o som de um áudio quando ele vem da mesma
+ * origem da página. Passando por aqui, o painel consegue medir o nível do
+ * áudio e dizer se a transmissão está tocando ou está no ar em silêncio.
+ */
+admin.get('/stream/preview', async (req, res, next) => {
+  try {
+    const { url } = await resolveStreamUrl(req.query.url);
+    await encaminharAudio(url, getSettings().stream_format, req, res);
   } catch (error) {
     next(error);
   }
