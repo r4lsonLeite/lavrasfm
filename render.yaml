@@ -8,7 +8,7 @@ services:
     name: lavrasfm
     runtime: node
     plan: starter          # o plano gratuito desliga o site e apaga o disco
-    region: oregon
+    region: virginia   # US East, a mais próxima do Nordeste brasileiro
     buildCommand: npm ci --include=dev && npm run build:css
     startCommand: npm start
     healthCheckPath: /api/health
