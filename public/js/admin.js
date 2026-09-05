@@ -468,38 +468,86 @@
     }
   });
 
-  // Testa o streaming direto no navegador, sem precisar abrir o site.
+  /**
+   * Testa o streaming no navegador e confirma que o áudio está mesmo saindo.
+   *
+   * `play()` resolver não significa que há som: o navegador aceita o comando
+   * antes de saber se consegue decodificar o fluxo. Por isso, esperamos o
+   * relógio do áudio avançar e conferimos volume e mudo, que são a causa mais
+   * comum de "diz que está tocando, mas não sai nada".
+   */
   let testAudio;
+  let testTimer;
+
   $('#test-stream').addEventListener('click', () => {
     const status = $('#stream-status');
     const url = settingsForm.elements.stream_url.value.trim();
 
+    const dizer = (texto) => {
+      status.textContent = texto;
+    };
+
     if (testAudio && !testAudio.paused) {
+      clearTimeout(testTimer);
       testAudio.pause();
-      status.textContent = 'Teste interrompido.';
+      dizer('Teste interrompido.');
       return;
     }
     if (!url) {
-      status.textContent = 'Informe a URL do streaming primeiro.';
+      dizer('Informe a URL do streaming primeiro.');
       return;
     }
 
-    status.textContent = 'Conectando…';
+    dizer('Conectando…');
     testAudio = new Audio(url);
+    testAudio.volume = 1;
+    testAudio.muted = false;
+
+    testAudio.addEventListener('error', () => {
+      // Uma queda passageira de conexão dispara este evento mesmo com o áudio
+      // tocando normalmente; só é falha de verdade se nada estiver saindo.
+      if (!testAudio.paused && testAudio.currentTime > 0) return;
+
+      clearTimeout(testTimer);
+      const codigo = testAudio.error?.code;
+      dizer(
+        codigo === 4
+          ? 'O navegador não consegue tocar esse formato de áudio. Confira com quem hospeda a transmissão qual o formato (MP3, AAC, OGG).'
+          : 'Não consegui tocar essa URL. Verifique o endereço, o https e o CORS do servidor.'
+      );
+    });
+
     testAudio.play().then(
       () => {
-        status.textContent = 'Tocando. Clique de novo para parar.';
+        dizer('Conectado. Conferindo se o áudio está saindo…');
+
+        // Se o relógio não anda, chegou dado mas nada está sendo decodificado.
+        testTimer = setTimeout(() => {
+          if (testAudio.paused) return;
+
+          if (testAudio.currentTime > 0) {
+            const silencioso = testAudio.muted || testAudio.volume === 0;
+            dizer(
+              silencioso
+                ? 'O áudio está tocando, mas sem som: o navegador está com esta aba no mudo. Clique com o botão direito na aba e escolha "Reativar som do site".'
+                : 'Tocando — o áudio está saindo. Se você não ouve nada, verifique o volume do computador e se a aba do navegador está muda. Clique de novo para parar.'
+            );
+          } else {
+            dizer(
+              'O navegador conectou, mas nenhum áudio foi decodificado em 3 segundos. ' +
+                'Isso costuma ser formato incompatível ou transmissão fora do ar no momento.'
+            );
+          }
+        }, 3000);
       },
       (error) => {
-        status.textContent =
+        dizer(
           error?.name === 'NotAllowedError'
             ? 'O navegador bloqueou a reprodução automática. Clique novamente.'
-            : 'Não consegui tocar essa URL. Verifique o endereço, o https e o CORS do servidor.';
+            : 'Não consegui tocar essa URL. Verifique o endereço, o https e o CORS do servidor.'
+        );
       }
     );
-    testAudio.addEventListener('error', () => {
-      status.textContent = 'Não consegui tocar essa URL. Verifique o endereço, o https e o CORS do servidor.';
-    });
   });
 
   /* ---------------------------------- conta --------------------------------- */

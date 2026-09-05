@@ -37,7 +37,10 @@ const CSP = [
   "style-src 'self' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: https:",
-  "media-src 'self' https:",
+  // http entra aqui porque muita rádio ainda transmite sem https. O navegador
+  // continua bloqueando isso dentro de um site https — a diferença é que o
+  // painel consegue explicar o motivo em vez de a página falhar em silêncio.
+  "media-src 'self' https: http:",
   'frame-src https://www.youtube-nocookie.com https://www.youtube.com',
   "connect-src 'self'",
   "base-uri 'none'",
