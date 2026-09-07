@@ -3,7 +3,7 @@
 Site da rádio LavrasFM: player ao vivo, notícias com destaques configuráveis,
 vídeos e lives do YouTube — tudo gerenciado por um painel administrativo.
 
-O layout segue o rascunho feito no Stitch (mesmas cores, tipografia e grade).
+O layout segue o rascunho feito no Stitch.
 
 ## O que já funciona
 
