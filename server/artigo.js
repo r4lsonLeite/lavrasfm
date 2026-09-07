@@ -7,6 +7,8 @@
  * copiar cada campo à mão.
  */
 
+import { buscarComDestinoSeguro, RedeBloqueadaError } from './rede.js';
+
 const TAMANHO_MAX = 512 * 1024; // basta o <head>; não baixamos a página inteira
 
 export class ArtigoError extends Error {
@@ -90,9 +92,10 @@ function decodificar(texto) {
 
 /** Baixa só o começo da página: o que interessa está no <head>. */
 async function baixarInicio(url, sinal) {
-  const resposta = await fetch(url, {
+  // Validação de rede a cada salto: o link da notícia não pode servir para
+  // alcançar a rede interna da hospedagem.
+  const { resposta } = await buscarComDestinoSeguro(url, {
     signal: sinal,
-    redirect: 'follow',
     headers: {
       // Alguns portais devolvem página vazia para clientes sem User-Agent.
       'User-Agent': 'Mozilla/5.0 (compatible; LavrasFM/1.0; +https://lavrasfm.com.br)',
@@ -133,6 +136,9 @@ export async function lerArtigo(entrada) {
     html = await baixarInicio(url, controlador.signal);
   } catch (erro) {
     if (erro instanceof ArtigoError) throw erro;
+    if (erro instanceof RedeBloqueadaError || erro?.name === 'RedeBloqueadaError') {
+      throw new ArtigoError(erro.message);
+    }
     throw new ArtigoError(
       erro?.name === 'AbortError'
         ? 'O site da notícia demorou demais para responder.'

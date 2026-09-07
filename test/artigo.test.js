@@ -2,6 +2,9 @@ import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 
+// Os testes sobem servidores em 127.0.0.1; a proteção de rede é desligada só aqui.
+process.env.PERMITIR_DESTINO_INTERNO = '1';
+
 const { lerArtigo, limparUrl } = await import('../server/artigo.js');
 
 // Portal de mentira, com as metatags no formato que os sites de notícia usam.

@@ -3,6 +3,7 @@ import { statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { resolveStreamUrl, probeStream, StreamError } from '../stream.js';
 import { lerArtigo, ArtigoError } from '../artigo.js';
+import { buscarComDestinoSeguro, exigirDestinoPublico, RedeBloqueadaError } from '../rede.js';
 import { getSettings, saveSettings, DEFAULT_SETTINGS, DB_PATH } from '../db.js';
 import {
   HIGHLIGHTS,
@@ -132,10 +133,9 @@ async function encaminharAudio(origem, formatoPadrao, req, res) {
   res.on('close', soltar);
 
   try {
-    const response = await fetch(origem, {
+    const { resposta: response } = await buscarComDestinoSeguro(origem, {
       headers: { 'User-Agent': 'LavrasFM/1.0' },
-      signal: upstream.signal,
-      redirect: 'follow'
+      signal: upstream.signal
     });
     if (!response.ok || !response.body) {
       return res.status(502).json({ error: 'A transmissão não respondeu.' });
@@ -197,8 +197,8 @@ api.get('/now-playing', (_req, res) => {
 
 /* ------------------------------ Autenticação -------------------------------- */
 
-api.post('/auth/login', throttleLogin, (req, res) => {
-  const session = login(req.body?.username, req.body?.password);
+api.post('/auth/login', throttleLogin, async (req, res) => {
+  const session = await login(req.body?.username, req.body?.password);
   if (!session) {
     res.locals.registerFailedLogin?.();
     return res.status(401).json({ error: 'Usuário ou senha inválidos.' });
@@ -216,12 +216,12 @@ api.post('/auth/logout', (req, res) => {
 
 api.get('/auth/me', (req, res) => res.json({ user: req.user }));
 
-api.post('/auth/password', requireAuth, (req, res) => {
+api.post('/auth/password', requireAuth, async (req, res) => {
   const next = String(req.body?.new_password || '');
   if (next.length < 8) {
     return res.status(400).json({ error: 'A nova senha precisa ter pelo menos 8 caracteres.' });
   }
-  if (!changePassword(req.user.id, req.body?.current_password, next)) {
+  if (!(await changePassword(req.user.id, req.body?.current_password, next))) {
     return res.status(400).json({ error: 'Senha atual incorreta.' });
   }
   clearSessionCookie(res);
@@ -232,6 +232,12 @@ api.post('/auth/password', requireAuth, (req, res) => {
 
 const admin = Router();
 admin.use(requireAuth);
+
+// Resposta de área autenticada não deve ficar em cache de navegador ou proxy.
+admin.use((_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, private');
+  next();
+});
 
 admin.get('/options', (_req, res) =>
   res.json({ highlights: HIGHLIGHTS, videoKinds: VIDEO_KINDS, settingKeys: Object.keys(DEFAULT_SETTINGS) })
@@ -312,12 +318,26 @@ admin.get('/stream/preview', async (req, res, next) => {
 });
 
 admin.get('/settings', (_req, res) => res.json({ settings: getSettings() }));
-admin.put('/settings', (req, res) => res.json({ settings: saveSettings(req.body || {}) }));
+admin.put('/settings', async (req, res, next) => {
+  try {
+    // Impede que um endereço interno seja gravado como transmissão, mesmo que
+    // alguém pule a etapa de verificação.
+    const informado = String(req.body?.stream_url || '').trim();
+    if (informado) await exigirDestinoPublico(informado);
+
+    res.json({ settings: saveSettings(req.body || {}) });
+  } catch (error) {
+    next(error);
+  }
+});
 
 api.use('/admin', admin);
 
 // Erros de validação viram 400 com mensagem legível; o resto vira 500.
 api.use((err, _req, res, _next) => {
+  if (err instanceof RedeBloqueadaError || err?.name === 'RedeBloqueadaError') {
+    return res.status(400).json({ error: err.message });
+  }
   if (err instanceof ArtigoError || err?.name === 'ArtigoError') {
     return res.status(400).json({ error: err.message });
   }

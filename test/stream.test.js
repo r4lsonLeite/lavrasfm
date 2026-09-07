@@ -5,6 +5,9 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+// Os testes sobem servidores em 127.0.0.1; a proteção de rede é desligada só aqui.
+process.env.PERMITIR_DESTINO_INTERNO = '1';
+
 const pasta = mkdtempSync(join(tmpdir(), 'lavrasfm-stream-'));
 process.env.DB_PATH = join(pasta, 'teste.db');
 

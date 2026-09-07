@@ -7,6 +7,8 @@
  * responde com áudio.
  */
 
+import { buscarComDestinoSeguro, exigirDestinoPublico, RedeBloqueadaError } from './rede.js';
+
 const PLAYLIST_EXTENSIONS = /\.(m3u|pls|asx|xspf)(\?|$)/i;
 
 // Páginas de diretórios de rádio: são HTML, nunca tocam em um <audio>.
@@ -82,7 +84,13 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...options, signal: controller.signal, redirect: 'follow' });
+    // Passa pela validação de rede: o servidor não pode ser usado para
+    // alcançar a rede interna da hospedagem.
+    const { resposta } = await buscarComDestinoSeguro(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return resposta;
   } finally {
     clearTimeout(timer);
   }
@@ -94,6 +102,10 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
  */
 export async function resolveStreamUrl(input) {
   const url = parseUrl(input);
+
+  // Recusa endereços internos antes de qualquer conexão, para o painel dar uma
+  // resposta clara em vez de deixar salvar algo que nunca vai tocar.
+  await exigirDestinoPublico(url);
 
   if (isDirectoryPage(url)) {
     throw new StreamError(
@@ -111,14 +123,19 @@ export async function resolveStreamUrl(input) {
   let response;
   try {
     response = await fetchWithTimeout(url, { headers: { 'User-Agent': 'LavrasFM/1.0' } });
-  } catch {
+  } catch (erro) {
+    if (erro instanceof RedeBloqueadaError || erro?.name === 'RedeBloqueadaError') throw erro;
     throw new StreamError('Não consegui baixar essa playlist. Verifique o endereço.');
   }
   if (!response.ok) {
     throw new StreamError(`A playlist respondeu ${response.status}. Verifique o endereço.`);
   }
 
-  const extracted = extractFromPlaylist(await response.text());
+  const bruto = await response.text();
+  if (bruto.length > 64 * 1024) {
+    throw new StreamError('Esse arquivo é grande demais para ser uma playlist de rádio.');
+  }
+  const extracted = extractFromPlaylist(bruto);
   if (!extracted) {
     throw new StreamError('Baixei a playlist, mas não achei nenhuma URL de áudio dentro dela.');
   }
@@ -133,6 +150,7 @@ export async function probeStream(streamUrl) {
       headers: { 'User-Agent': 'LavrasFM/1.0', 'Icy-MetaData': '1' }
     });
   } catch (error) {
+    if (error?.name === 'RedeBloqueadaError') return { ok: false, message: error.message };
     return {
       ok: false,
       message:

@@ -51,7 +51,7 @@ if (novaSenha && novaSenha.length < 8) {
 const sorteada = !novaSenha;
 if (sorteada) novaSenha = crypto.randomBytes(9).toString('base64url');
 
-db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(novaSenha), alvo.id);
+db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(await hashPassword(novaSenha), alvo.id);
 // Qualquer sessão aberta com a senha antiga deixa de valer.
 const { changes } = db.prepare('DELETE FROM sessions WHERE user_id = ?').run(alvo.id);
 db.close();

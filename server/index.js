@@ -15,6 +15,7 @@ const { api, encerrarRetransmissoes } = await import('./routes/api.js');
 const { ensureAdminUser, sessionMiddleware, requireAuthPage } = await import('./auth.js');
 const { db, getSettings } = await import('./db.js');
 const { registrarErro } = await import('./log.js');
+const { destinoInternoPermitido } = await import('./rede.js');
 const { agendarBackups } = await import('./backup.js');
 
 const PUBLIC_DIR = join(raiz, 'public');
@@ -23,7 +24,16 @@ const EM_PRODUCAO = process.env.NODE_ENV === 'production';
 
 const app = express();
 app.disable('x-powered-by');
-if (process.env.TRUST_PROXY) app.set('trust proxy', true);
+/**
+ * Confiança no proxy reverso. Aceita o número de saltos (1 no Render) ou uma
+ * lista de IPs/sub-redes. `true` foi deixado de fora de propósito: confiar em
+ * qualquer proxy deixa o cabeçalho de IP ser forjado, e com ele o limite de
+ * tentativas de login. Um valor desligado ("0", "false", vazio) não ativa nada.
+ */
+const proxyConfiavel = String(process.env.TRUST_PROXY || '').trim();
+if (proxyConfiavel && !['0', 'false', 'no'].includes(proxyConfiavel.toLowerCase())) {
+  app.set('trust proxy', /^\d+$/.test(proxyConfiavel) ? Number(proxyConfiavel) : proxyConfiavel);
+}
 
 /**
  * Cabeçalhos de segurança. A política de conteúdo é estrita: nenhum script ou
@@ -55,6 +65,10 @@ app.use((_req, res, next) => {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  // Isola a janela do site de páginas que a tenham aberto, e impede que outros
+  // sites incorporem os recursos daqui como se fossem deles.
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
   if (EM_PRODUCAO) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
@@ -90,6 +104,34 @@ app.use((req, _res, next) => {
 });
 
 app.use(sessionMiddleware);
+
+/**
+ * Defesa contra CSRF. O cookie SameSite=Lax já impede o caso clássico, mas
+ * uma aplicação administrativa merece uma segunda barreira: toda requisição
+ * que altera dados precisa vir da própria origem do site.
+ */
+const METODOS_QUE_ALTERAM = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+app.use('/api', (req, res, next) => {
+  if (!METODOS_QUE_ALTERAM.has(req.method)) return next();
+
+  const origem = req.get('origin') || req.get('referer');
+  // Sem cabeçalho de origem não há navegador envolvido (curl, aplicativo), e
+  // sem navegador não existe o ataque que estamos evitando aqui.
+  if (!origem) return next();
+
+  let host;
+  try {
+    host = new URL(origem).host;
+  } catch {
+    return res.status(403).json({ error: 'Origem da requisição inválida.' });
+  }
+
+  if (host !== req.get('host')) {
+    return res.status(403).json({ error: 'Requisição vinda de outro site foi recusada.' });
+  }
+  next();
+});
+
 app.use('/api', api);
 
 /**
@@ -145,6 +187,19 @@ app.get('/login', (req, res) => {
 
 app.get('/admin', requireAuthPage, (_req, res) => res.sendFile(join(PUBLIC_DIR, 'admin.html')));
 
+/**
+ * O painel e o login têm rotas próprias, com verificação de sessão. Servir os
+ * mesmos arquivos pelo caminho estático deixaria a fronteira de autenticação
+ * inconsistente — /admin exige login, /admin.html não exigiria.
+ */
+const PAGINAS_INTERNAS = new Set(['/admin.html', '/login.html', '/500.html', '/404.html']);
+app.use((req, res, next) => {
+  if (PAGINAS_INTERNAS.has(req.path)) {
+    return res.redirect(302, req.path === '/admin.html' ? '/admin' : '/');
+  }
+  next();
+});
+
 app.use(
   express.static(PUBLIC_DIR, {
     extensions: ['html'],
@@ -168,12 +223,26 @@ app.use((err, req, res, _next) => {
   res.status(500).sendFile(join(PUBLIC_DIR, '500.html'));
 });
 
-const admin = ensureAdminUser();
+if (destinoInternoPermitido() && EM_PRODUCAO) {
+  console.warn(
+    '\n  ATENÇÃO: PERMITIR_DESTINO_INTERNO está ligado em produção.\n' +
+      '  Isso desativa a proteção contra o servidor ser usado para acessar\n' +
+      '  a rede interna. Remova essa variável do ambiente.\n'
+  );
+}
+
+const admin = await ensureAdminUser();
 const pararBackups = agendarBackups();
 
 // Falhas não capturadas ficam registradas em vez de sumirem no console.
 process.on('unhandledRejection', (motivo) => registrarErro('promessa não tratada', motivo));
-process.on('uncaughtException', (erro) => registrarErro('exceção não capturada', erro));
+
+// Depois de uma exceção não capturada o estado da aplicação não é confiável.
+// Registramos, encerramos com ordem e deixamos a hospedagem subir de novo.
+process.on('uncaughtException', (erro) => {
+  registrarErro('exceção não capturada', erro);
+  desligar('exceção não capturada');
+});
 
 const server = app.listen(PORT, () => {
   console.log(`\n  LavrasFM no ar em http://localhost:${PORT}`);

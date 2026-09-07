@@ -196,6 +196,33 @@ para fora da pasta do código, senão um deploy novo apaga o banco.
 O endereço `/api/health` responde com um sinal de vida, para a hospedagem saber
 se precisa reiniciar o serviço.
 
+## Segurança
+
+Decisões que valem conhecer antes de mexer no código:
+
+- **Buscas feitas pelo servidor** (transmissão, playlist, link de notícia) passam
+  por `server/rede.js`, que resolve o nome para IP e recusa qualquer destino que
+  não seja internet pública — o próprio servidor, redes privadas, link-local e o
+  serviço de metadados da nuvem. A checagem é refeita a cada redirecionamento,
+  porque validar só o texto da URL não protege contra um destino que redireciona
+  para dentro depois.
+- **`TRUST_PROXY` é o número de proxies** na frente da aplicação, não `true`.
+  Confiar em qualquer proxy deixa o IP do visitante ser forjado por cabeçalho, e
+  com ele o limite de tentativas de login.
+- **Sessões**: o cookie leva o identificador em claro, o banco guarda só o
+  SHA-256. Uma cópia vazada do banco não permite assumir sessões abertas.
+- **Login**: scrypt assíncrono (a versão síncrona segura o servidor inteiro a
+  cada verificação), com o mesmo tempo de resposta para usuário inexistente, e
+  limite de 8 tentativas por IP **e** por usuário.
+- **Operações que alteram dados** exigem que a requisição venha da própria
+  origem do site, além do cookie `SameSite=Lax`.
+- **As páginas do painel** só são servidas pelas rotas com verificação de
+  sessão; `/admin.html` e afins redirecionam.
+- **Depois de uma exceção não capturada** o servidor encerra com ordem em vez de
+  seguir em estado duvidoso — a hospedagem sobe de novo.
+
+`npm audit` faz parte da rotina antes de publicar.
+
 ## Notas técnicas
 
 - **Tailwind compilado**: o CSS sai de `src/tailwind.css` para
