@@ -64,9 +64,13 @@
 
   function render() {
     const playing = !audio.paused && !audio.ended;
-    els.icons().forEach((el) => {
-      el.textContent = playing ? 'pause' : 'play_arrow';
-    });
+    const desenhar = (el, nome) => {
+      const tamanho = Number(el.dataset.iconeTamanho) || 20;
+      el.dataset.icone = nome;
+      el.innerHTML = window.LavrasIcones?.icone(nome, tamanho) ?? '';
+    };
+
+    els.icons().forEach((el) => desenhar(el, playing ? 'pausar' : 'tocar'));
     els.labels().forEach((el) => {
       el.textContent = playing ? 'Pausar' : 'Ouvir ao vivo';
     });
@@ -76,9 +80,16 @@
     els.equalizers().forEach((el) => {
       el.classList.toggle('is-playing', playing);
     });
-    els.volumeIcons().forEach((el) => {
-      el.textContent = audio.muted || audio.volume === 0 ? 'volume_off' : audio.volume < 0.5 ? 'volume_down' : 'volume_up';
-    });
+    els.volumeIcons().forEach((el) =>
+      desenhar(
+        el,
+        audio.muted || audio.volume === 0
+          ? 'volume-mudo'
+          : audio.volume < 0.5
+            ? 'volume-medio'
+            : 'volume-alto'
+      )
+    );
     els.volumes().forEach((el) => {
       const value = String(Math.round(audio.volume * 100));
       if (el.value !== value) el.value = value;

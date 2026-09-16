@@ -1,0 +1,10 @@
+/*
+ * Rede de proteção mínima, carregada ANTES do CSS do Tailwind.
+ *
+ * `hidden` controla lógica no painel (abas, prévias, avisos), então precisa
+ * funcionar mesmo que o arquivo do Tailwind falhe. Fica aqui, e não no
+ * styles.css, por causa da ordem da cascata: vindo antes, o Tailwind ainda
+ * consegue reexibir um elemento com `lg:flex` — o que não acontecia quando
+ * esta regra vinha depois e com !important, deixando o menu do site invisível.
+ */
+.hidden { display: none; }

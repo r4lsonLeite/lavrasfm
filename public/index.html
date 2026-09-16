@@ -7,7 +7,7 @@
 <meta name="description" content="{{DESCRIPTION}}">
 <link rel="canonical" href="{{SITE_URL}}/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0b4aa8">
 
 <!-- Prévia ao compartilhar no WhatsApp, Facebook, X e afins -->
 <meta property="og:type" content="website">
@@ -20,95 +20,136 @@
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="/css/base.css" rel="stylesheet">
 <link href="/css/tailwind.css" rel="stylesheet">
 <link href="/css/styles.css" rel="stylesheet">
 </head>
-<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col pb-24">
+<body class="bg-fundo text-tinta font-body-md min-h-screen flex flex-col pb-24">
 
-<!-- Barra de navegação -->
-<header class="w-full top-0 sticky bg-surface border-b border-outline-variant z-50">
-  <div class="flex justify-between items-center max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop h-20">
-    <a href="/" class="font-headline-md text-headline-md font-bold text-primary" data-station-name>LavrasFM</a>
-    <nav class="hidden md:flex gap-8 items-center h-full">
-      <a class="font-body-md text-body-md text-primary border-b-2 border-primary h-full flex items-center pt-[2px]" href="/">Início</a>
-      <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors h-full flex items-center" href="#noticias">Notícias</a>
-      <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors h-full flex items-center" href="#videos">Vídeos</a>
-      <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors h-full flex items-center" href="#contato">Contato</a>
-    </nav>
-    <div class="flex items-center gap-4">
-      <button data-play-toggle class="bg-primary text-on-primary font-label-sm text-label-sm px-6 py-3 rounded hover:opacity-90 transition-opacity flex items-center gap-2">
-        <span class="material-symbols-outlined text-[18px]" data-play-icon>play_arrow</span>
-        <span data-play-label>Ouvir ao vivo</span>
-      </button>
+<!-- Cabeçalho -->
+<header class="relative bg-gradiente-azul text-branco overflow-hidden">
+  <div class="ondas-cabecalho" aria-hidden="true"></div>
+
+  <div class="relative max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop">
+    <div class="flex items-center justify-between gap-6 py-4">
+      <a href="/" class="shrink-0" aria-label="Página inicial da {{STATION_NAME}}">
+        <img src="/img/logo-branco.png" alt="{{STATION_NAME}}" class="h-11 md:h-14 w-auto">
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-7" aria-label="Seções do site">
+        <a class="menu-item menu-ativo" href="#topo">Início</a>
+        <a class="menu-item" href="#noticias">Notícias</a>
+        <a class="menu-item" href="#videos">Vídeos</a>
+        <a class="menu-item" href="#contato">Contato</a>
+      </nav>
+
+      <div class="flex items-center gap-3 shrink-0">
+        <button data-play-toggle
+                class="bg-gradiente-laranja text-branco font-display font-bold text-[13px] tracking-wide uppercase pl-4 pr-5 py-3 rounded-full shadow-carta hover:brightness-105 transition flex items-center gap-2">
+          <span data-play-icon data-icone="tocar" data-icone-tamanho="20"></span>
+          <span data-play-label>Ouvir ao vivo</span>
+        </button>
+      </div>
     </div>
+
+    <!-- Menu em telas pequenas -->
+    <nav class="lg:hidden flex items-center gap-5 overflow-x-auto pb-3 -mt-1" aria-label="Seções do site">
+      <a class="menu-item menu-ativo" href="#topo">Início</a>
+      <a class="menu-item" href="#noticias">Notícias</a>
+      <a class="menu-item" href="#videos">Vídeos</a>
+      <a class="menu-item" href="#contato">Contato</a>
+    </nav>
   </div>
 </header>
 
-<main class="flex-grow max-w-[1200px] w-full mx-auto px-margin-mobile md:px-margin-desktop py-10 flex flex-col gap-[56px]">
+<main id="topo" class="relative flex-grow">
+  <!-- O conteúdo sobe sobre a faixa azul, como uma folha apoiada nela -->
+  <div class="absolute inset-x-0 top-0 h-28 bg-azul-700" aria-hidden="true"></div>
 
-  <!-- Capa: manchete grande + 3 destaques laterais + grade -->
-  <section id="noticias">
-    <div data-cover>
-      <p class="font-body-md text-body-md text-on-surface-variant">Carregando notícias…</p>
-    </div>
-  </section>
+  <div class="relative max-w-[1280px] w-full mx-auto px-margin-mobile md:px-margin-desktop py-6 md:py-8 flex flex-col gap-10">
 
-  <!-- Vídeos e lives -->
-  <section id="videos">
-    <h2 class="font-headline-md text-headline-md text-primary mb-6 pb-4 border-b-2 border-primary">Vídeos &amp; Lives</h2>
-    <div data-video-slot></div>
-  </section>
+    <!-- Capa: manchete + últimas notícias -->
+    <section id="noticias" class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] gap-6">
+      <div data-manchete></div>
+      <aside data-ultimas></aside>
+    </section>
+
+    <!-- Demais notícias -->
+    <section data-grade-noticias></section>
+
+    <!-- Vídeos e lives -->
+    <section id="videos">
+      <div class="flex items-center gap-4 mb-5">
+        <h2 class="font-display text-[22px] font-extrabold text-tinta uppercase tracking-tight">Vídeos &amp; Lives</h2>
+        <span class="h-1 flex-grow bg-gradiente-laranja rounded-full max-w-[120px]"></span>
+      </div>
+      <div data-video-slot></div>
+    </section>
+  </div>
 </main>
 
 <!-- Rodapé -->
-<footer id="contato" class="w-full bg-surface-container border-t border-outline-variant mt-auto">
-  <div class="flex flex-col md:flex-row justify-between items-center max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop py-12 gap-8 md:gap-0">
-    <div class="font-headline-md text-headline-md text-primary font-bold" data-station-name>LavrasFM</div>
-    <nav class="flex flex-wrap justify-center gap-6 md:gap-8" data-social-links></nav>
-    <div class="font-label-sm text-label-sm text-on-surface text-center" data-footer-text></div>
+<footer id="contato" class="relative bg-gradiente-azul text-branco mt-10 overflow-hidden">
+  <div class="ondas-rodape" aria-hidden="true"></div>
+
+  <div class="relative max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+    <div class="flex flex-col gap-3">
+      <!-- self-start: sem isso o flex-col estica a imagem na largura do rodapé -->
+      <img src="/img/logo-branco.png" alt="{{STATION_NAME}}" class="h-12 w-auto self-start">
+      <p class="font-body-md text-[14px] text-azul-100 max-w-[38ch]" data-tagline></p>
+    </div>
+
+    <nav class="flex flex-wrap gap-x-6 gap-y-2" data-social-links aria-label="Redes sociais"></nav>
+  </div>
+
+  <div class="relative border-t border-white/15">
+    <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-4 text-[13px] text-azul-100"
+         data-footer-text></div>
   </div>
 </footer>
 
 <!-- Player fixo -->
-<div class="fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant z-50" data-player-bar>
-  <div class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop h-20 flex items-center justify-between gap-4 md:gap-8">
-    <div class="flex items-center gap-4 min-w-0 md:min-w-[240px]">
-      <button data-play-toggle class="w-12 h-12 bg-primary text-on-primary rounded flex items-center justify-center hover:opacity-90 transition-opacity shrink-0" aria-label="Tocar ou pausar a rádio">
-        <span class="material-symbols-outlined text-[32px]" data-play-icon>play_arrow</span>
-      </button>
-      <div class="min-w-0">
-        <div class="font-label-sm text-label-sm text-primary flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-error block animate-pulse"></span>
-          <span data-player-status>AO VIVO</span>
-        </div>
-        <div class="font-body-md text-body-md text-on-surface-variant truncate" data-now-playing>Programação Musical</div>
+<div class="fixed bottom-0 left-0 w-full bg-azul-900 text-branco z-50 shadow-player" data-player-bar>
+  <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop h-20 flex items-center gap-4 md:gap-6">
+
+    <img src="/img/marca.png" alt="" class="h-11 w-11 rounded-full shrink-0 hidden sm:block">
+
+    <div class="min-w-0 flex-grow sm:flex-grow-0 sm:w-[240px]">
+      <div class="font-label-sm text-label-sm text-laranja-400 flex items-center gap-2 uppercase">
+        <span class="w-2 h-2 rounded-full bg-ao-vivo block animate-pulse"></span>
+        <span data-player-status>Ao vivo</span>
       </div>
+      <div class="font-body-md text-[15px] font-semibold truncate" data-now-playing>Programação Musical</div>
+      <div class="font-body-md text-[12px] text-azul-100 truncate" data-station-name>LavrasFM</div>
     </div>
 
-    <div class="flex-grow items-center gap-1 h-8 text-primary hidden md:flex" data-equalizer>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
-      <span class="eq-bar"></span>
+    <button data-play-toggle
+            class="w-14 h-14 bg-gradiente-laranja rounded-full flex items-center justify-center shrink-0 hover:brightness-110 transition shadow-carta"
+            aria-label="Tocar ou pausar a rádio">
+      <span data-play-icon data-icone="tocar" data-icone-tamanho="30"></span>
+    </button>
+
+    <div class="hidden md:flex items-center gap-3 shrink-0">
+      <button data-mute-toggle class="text-azul-100 hover:text-branco transition" title="Silenciar" data-volume-icon data-icone="volume-alto"></button>
+      <input data-volume type="range" min="0" max="100" value="80" class="volume w-28" aria-label="Volume">
     </div>
 
-    <div class="flex items-center gap-3 shrink-0">
-      <button data-mute-toggle class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors" title="Silenciar" data-volume-icon>volume_up</button>
-      <input data-volume type="range" min="0" max="100" value="80" class="volume w-24 hidden md:block" aria-label="Volume">
+    <div class="hidden lg:flex flex-grow items-center gap-1 h-8 text-laranja-400" data-equalizer>
+      <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+      <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+      <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+      <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
     </div>
+
+    <span class="hidden xl:block font-label-sm text-label-sm text-azul-100 uppercase shrink-0" data-tagline-curta></span>
+
+    <button data-mute-toggle class="md:hidden text-azul-100 shrink-0" title="Silenciar" data-volume-icon data-icone="volume-alto"></button>
   </div>
 </div>
 
+<script src="/js/icones.js"></script>
 <script src="/js/player.js"></script>
 <script src="/js/home.js"></script>
 </body>

@@ -5,21 +5,22 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Entrar — Painel LavrasFM</title>
 <meta name="robots" content="noindex">
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="/css/base.css" rel="stylesheet">
 <link href="/css/tailwind.css" rel="stylesheet">
 <link href="/css/styles.css" rel="stylesheet">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
-<body class="bg-background text-on-background font-body-md min-h-screen flex items-center justify-center px-margin-mobile">
+<body class="bg-gradiente-azul text-branco font-body-md min-h-screen flex items-center justify-center px-margin-mobile">
 
 <main class="w-full max-w-[400px]">
-  <div class="text-center mb-8">
-    <div class="font-headline-md text-headline-md font-bold text-primary">LavrasFM</div>
-    <p class="font-body-md text-body-md text-on-surface-variant mt-1">Painel administrativo</p>
+  <div class="text-center mb-7 flex flex-col items-center gap-3">
+    <img src="/img/logo-branco.png" alt="LavrasFM" class="h-14 w-auto">
+    <p class="font-label-sm text-label-sm uppercase text-azul-100">Painel administrativo</p>
   </div>
 
-  <form id="login-form" class="bg-surface border border-outline-variant rounded-DEFAULT p-8 flex flex-col gap-5">
+  <form id="login-form" class="bg-branco rounded-2xl shadow-carta p-8 flex flex-col gap-5">
     <label class="flex flex-col gap-2">
       <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Usuário</span>
       <input name="username" required autocomplete="username" autofocus
@@ -35,13 +36,13 @@
     <p id="error" class="hidden font-body-md text-body-md text-error bg-error-container px-4 py-3 rounded-DEFAULT"></p>
 
     <button type="submit"
-            class="bg-primary text-on-primary font-label-sm text-label-sm px-6 py-4 rounded hover:opacity-90 transition-opacity disabled:opacity-50">
+            class="bg-gradiente-laranja text-branco font-label-sm text-label-sm uppercase px-6 py-4 rounded-full hover:brightness-105 transition disabled:opacity-50">
       Entrar
     </button>
   </form>
 
   <p class="text-center mt-6">
-    <a href="/" class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline">← Voltar para o site</a>
+    <a href="/" class="font-label-sm text-label-sm text-azul-100 hover:text-branco hover:underline">← Voltar para o site</a>
   </p>
 </main>
 

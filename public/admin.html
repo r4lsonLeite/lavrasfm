@@ -5,8 +5,8 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Painel — LavrasFM</title>
 <meta name="robots" content="noindex">
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="/css/base.css" rel="stylesheet">
 <link href="/css/tailwind.css" rel="stylesheet">
 <link href="/css/styles.css" rel="stylesheet">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -16,13 +16,13 @@
 <header class="w-full top-0 sticky bg-surface border-b border-outline-variant z-50">
   <div class="flex justify-between items-center max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop h-20 gap-4">
     <div class="flex items-baseline gap-3 min-w-0">
-      <span class="font-headline-md text-headline-md font-bold text-primary">LavrasFM</span>
+      <img src="/img/logo-preto.png" alt="LavrasFM" class="h-9 w-auto">
       <span class="font-label-sm text-label-sm text-on-surface-variant uppercase hidden sm:inline">Painel</span>
     </div>
     <div class="flex items-center gap-4">
       <a href="/" target="_blank" rel="noopener"
          class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors hidden sm:flex items-center gap-1">
-        <span class="material-symbols-outlined text-[18px]">open_in_new</span> Ver o site
+        <span data-icone="abrir-fora" data-icone-tamanho="17"></span> Ver o site
       </a>
       <span class="font-label-sm text-label-sm text-on-surface-variant hidden md:inline" id="current-user"></span>
       <button id="logout"
@@ -67,7 +67,7 @@
 
         <button type="button" id="buscar-noticia"
                 class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-[18px]">download</span> Buscar título, resumo e foto
+          <span data-icone="baixar" data-icone-tamanho="17"></span> Buscar título, resumo e foto
         </button>
         <div id="buscar-resultado" class="hidden font-label-sm text-label-sm px-4 py-3 rounded-DEFAULT"></div>
 
@@ -116,10 +116,6 @@
         <fieldset class="flex flex-col gap-2 border border-outline-variant rounded-DEFAULT p-4">
           <legend class="font-label-sm text-label-sm text-on-surface-variant uppercase px-1">Como destacar</legend>
           <div id="highlight-options" class="flex flex-col gap-2"></div>
-          <label class="flex items-center gap-2 mt-2 pt-3 border-t border-outline-variant">
-            <input type="checkbox" name="invert" class="rounded-DEFAULT border-outline-variant text-primary focus:ring-primary">
-            <span class="font-body-md text-body-md">Card em fundo preto (chama mais atenção)</span>
-          </label>
         </fieldset>
 
         <div class="grid grid-cols-2 gap-3">
@@ -262,7 +258,7 @@
 
         <button type="button" id="resolve-stream"
                 class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-[18px]">travel_explore</span> Verificar endereço
+          <span data-icone="lupa" data-icone-tamanho="17"></span> Verificar endereço
         </button>
         <div id="resolve-result" class="hidden font-body-md text-body-md px-4 py-3 rounded-DEFAULT"></div>
 
@@ -299,7 +295,7 @@
         <div class="border-t border-outline-variant pt-4 flex flex-col gap-3">
           <button type="button" id="test-stream"
                   class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">play_circle</span> Testar transmissão
+            <span data-icone="tocar-circulo" data-icone-tamanho="17"></span> Testar transmissão
           </button>
           <p id="stream-status" class="font-label-sm text-label-sm text-on-surface-variant"></p>
         </div>
@@ -391,6 +387,7 @@
   </section>
 </main>
 
+<script src="/js/icones.js"></script>
 <script src="/js/admin.js"></script>
 </body>
 </html>

@@ -1,82 +1,110 @@
-/* Tema do LavrasFM — mesmas cores, tipografia e espaçamentos do rascunho. */
-// Se o CDN do Tailwind não carregar, a página ainda deve abrir: guardamos a
-// config em window.lavrasTheme e só a aplicamos quando `tailwind` existir.
+/*
+ * Identidade visual da LavrasFM.
+ *
+ * Este arquivo é a fonte única das cores, tipografia e espaçamentos: o
+ * tailwind.config.cjs lê daqui para gerar o CSS. Mudou aqui, rode
+ * `npm run build:css`.
+ */
 window.lavrasTheme = {
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        'secondary-container': '#dfe0e0',
-        background: '#f8f9fb',
-        'error-container': '#ffdad6',
-        'on-secondary': '#ffffff',
-        'tertiary-container': '#151c27',
-        error: '#ba1a1a',
-        'on-secondary-container': '#616363',
-        'surface-container-low': '#f3f4f6',
-        'tertiary-fixed-dim': '#c0c7d6',
-        'on-tertiary-container': '#7d8492',
-        'secondary-fixed-dim': '#c6c6c7',
-        'surface-variant': '#e1e2e4',
-        'on-primary-container': '#858383',
-        'surface-bright': '#f8f9fb',
-        primary: '#000000',
-        'primary-fixed': '#e5e2e1',
+        /* Azuis — do fundo do cabeçalho ao texto de apoio. */
+        'azul-900': '#052a63',
+        'azul-800': '#073a86',
+        'azul-700': '#0b4aa8',
+        'azul-600': '#1160cf',
+        'azul-500': '#1f7ae8',
+        'azul-100': '#d9e8fb',
+        'azul-50': '#eef4fd',
+
+        /* Laranjas — o botão de ouvir, as tarjas de categoria, os destaques. */
+        'laranja-600': '#e06a05',
+        'laranja-500': '#f7861b',
+        'laranja-400': '#fba91a',
+        'amarelo-300': '#ffc63b',
+
+        /* Tinta e superfícies. */
+        tinta: '#10243f',
+        'tinta-media': '#33455e',
+        'tinta-suave': '#5a6a80',
+        'tinta-clara': '#8896a8',
+        borda: '#dde5ee',
+        'borda-forte': '#c3d1e0',
+        fundo: '#eef2f7',
+        branco: '#ffffff',
+
+        /* Sinal de transmissão ao vivo. */
+        'ao-vivo': '#e8353b',
+
+        /* Nomes antigos, mantidos para o painel administrativo. */
+        primary: '#073a86',
         'on-primary': '#ffffff',
-        'on-secondary-fixed-variant': '#454747',
-        'on-secondary-fixed': '#1a1c1c',
-        'on-surface': '#191c1e',
-        'inverse-surface': '#2e3132',
-        'on-surface-variant': '#444748',
-        'secondary-fixed': '#e2e2e2',
-        'on-error': '#ffffff',
-        outline: '#747878',
-        'on-primary-fixed': '#1c1b1b',
-        'outline-variant': '#c4c7c7',
-        'on-background': '#191c1e',
-        'surface-container-high': '#e7e8ea',
-        'surface-container-highest': '#e1e2e4',
-        'on-error-container': '#93000a',
-        'primary-fixed-dim': '#c8c6c5',
-        secondary: '#5d5f5f',
-        'primary-container': '#1c1b1b',
-        surface: '#f8f9fb',
-        'on-tertiary': '#ffffff',
-        'on-tertiary-fixed-variant': '#404754',
-        'surface-container': '#edeef0',
-        'inverse-on-surface': '#f0f1f3',
-        'on-tertiary-fixed': '#151c27',
+        surface: '#ffffff',
+        'surface-container': '#eef2f7',
+        'surface-container-low': '#f6f9fc',
         'surface-container-lowest': '#ffffff',
-        tertiary: '#000000',
-        'surface-dim': '#d9dadc',
-        'on-primary-fixed-variant': '#474646',
-        'tertiary-fixed': '#dce2f3',
-        'inverse-primary': '#c8c6c5',
-        'surface-tint': '#5f5e5e'
+        'surface-container-high': '#e3eaf3',
+        'surface-variant': '#dde5ee',
+        'surface-dim': '#d7e0ea',
+        'on-surface': '#10243f',
+        'on-surface-variant': '#5a6a80',
+        'on-secondary-container': '#5a6a80',
+        outline: '#8896a8',
+        'outline-variant': '#dde5ee',
+        error: '#e8353b',
+        'on-error': '#ffffff',
+        'error-container': '#fde8e8',
+        'on-error-container': '#a01a20',
+        background: '#eef2f7',
+        'on-background': '#10243f'
       },
-      borderRadius: { DEFAULT: '0.125rem', lg: '0.25rem', xl: '0.5rem', full: '0.75rem' },
+
+      borderRadius: {
+        DEFAULT: '0.5rem',
+        lg: '0.75rem',
+        xl: '1rem',
+        '2xl': '1.5rem',
+        full: '9999px'
+      },
+
       spacing: {
         'margin-desktop': '40px',
-        'container-max': '1200px',
-        gutter: '24px',
+        'container-max': '1280px',
+        gutter: '28px',
         unit: '8px',
         'margin-mobile': '16px'
       },
+
       fontFamily: {
+        /* Archivo carrega as manchetes; Hanken Grotesk, o texto corrido. */
+        display: ['Archivo', 'Hanken Grotesk', 'system-ui', 'sans-serif'],
         'body-md': ['Hanken Grotesk', 'system-ui', 'sans-serif'],
         'label-sm': ['Hanken Grotesk', 'system-ui', 'sans-serif'],
-        'display-lg-mobile': ['Hanken Grotesk', 'system-ui', 'sans-serif'],
-        'display-lg': ['Hanken Grotesk', 'system-ui', 'sans-serif'],
-        'headline-md': ['Hanken Grotesk', 'system-ui', 'sans-serif'],
+        'display-lg-mobile': ['Archivo', 'system-ui', 'sans-serif'],
+        'display-lg': ['Archivo', 'system-ui', 'sans-serif'],
+        'headline-md': ['Archivo', 'system-ui', 'sans-serif'],
         'body-lg': ['Hanken Grotesk', 'system-ui', 'sans-serif']
       },
+
       fontSize: {
         'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
-        'label-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.05em', fontWeight: '600' }],
-        'display-lg-mobile': ['32px', { lineHeight: '40px', letterSpacing: '-0.01em', fontWeight: '700' }],
-        'display-lg': ['48px', { lineHeight: '56px', letterSpacing: '-0.02em', fontWeight: '700' }],
-        'headline-md': ['24px', { lineHeight: '32px', fontWeight: '600' }],
+        'label-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.08em', fontWeight: '700' }],
+        'display-lg-mobile': ['30px', { lineHeight: '36px', letterSpacing: '-0.02em', fontWeight: '800' }],
+        'display-lg': ['44px', { lineHeight: '50px', letterSpacing: '-0.025em', fontWeight: '800' }],
+        'headline-md': ['22px', { lineHeight: '28px', letterSpacing: '-0.01em', fontWeight: '700' }],
         'body-lg': ['18px', { lineHeight: '28px', fontWeight: '400' }]
+      },
+
+      backgroundImage: {
+        'gradiente-azul': 'linear-gradient(135deg, #073a86 0%, #0b4aa8 45%, #1160cf 100%)',
+        'gradiente-laranja': 'linear-gradient(135deg, #f7861b 0%, #fba91a 100%)'
+      },
+
+      boxShadow: {
+        carta: '0 1px 3px rgba(16, 36, 63, .08), 0 8px 24px -12px rgba(16, 36, 63, .18)',
+        player: '0 -4px 24px rgba(5, 42, 99, .22)'
       }
     }
   }

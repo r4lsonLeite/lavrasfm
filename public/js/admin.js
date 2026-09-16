@@ -5,6 +5,8 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+  const ico = (nome, tamanho = 19) => window.LavrasIcones?.icone(nome, tamanho) ?? '';
+
   const escapeHtml = (value) =>
     String(value ?? '').replace(/[&<>"']/g, (char) => ({
       '&': '&amp;',
@@ -162,7 +164,6 @@
           <div class="flex flex-wrap items-center gap-2 mb-1">
             <span class="font-label-sm text-label-sm text-on-surface-variant">${escapeHtml(item.category)}</span>
             <span class="font-label-sm text-label-sm px-2 py-1 rounded bg-primary text-on-primary">${escapeHtml(item.highlight_label)}</span>
-            ${item.invert ? '<span class="font-label-sm text-label-sm px-2 py-1 rounded border border-outline-variant">FUNDO PRETO</span>' : ''}
             ${badge}
           </div>
           <h3 class="font-body-lg text-body-lg font-bold text-primary line-clamp-2">${escapeHtml(item.title)}</h3>
@@ -174,11 +175,11 @@
         </div>
         <div class="flex flex-col gap-1 shrink-0">
           <button data-action="edit-news" data-id="${item.id}" title="Editar"
-                  class="material-symbols-outlined text-on-surface-variant hover:text-primary p-1">edit</button>
+                  class="text-tinta-suave hover:text-azul-700 transition-colors p-1">${ico('editar')}</button>
           <button data-action="toggle-news" data-id="${item.id}" title="${item.active ? 'Despublicar' : 'Publicar'}"
-                  class="material-symbols-outlined text-on-surface-variant hover:text-primary p-1">${item.active ? 'visibility' : 'visibility_off'}</button>
+                  class="text-tinta-suave hover:text-azul-700 transition-colors p-1">${ico(item.active ? 'visivel' : 'oculto')}</button>
           <button data-action="delete-news" data-id="${item.id}" title="Excluir"
-                  class="material-symbols-outlined text-on-surface-variant hover:text-error p-1">delete</button>
+                  class="text-tinta-suave hover:text-error transition-colors p-1">${ico('excluir')}</button>
         </div>
       </article>`;
   }
@@ -412,11 +413,11 @@
         </div>
         <div class="flex flex-col gap-1 shrink-0">
           <button data-action="edit-video" data-id="${item.id}" title="Editar"
-                  class="material-symbols-outlined text-on-surface-variant hover:text-primary p-1">edit</button>
+                  class="text-tinta-suave hover:text-azul-700 transition-colors p-1">${ico('editar')}</button>
           <button data-action="feature-video" data-id="${item.id}" title="Destacar na home"
-                  class="material-symbols-outlined p-1 ${item.featured ? 'text-primary' : 'text-on-surface-variant hover:text-primary'}">${item.featured ? 'star' : 'star_outline'}</button>
+                  class="p-1 transition-colors ${item.featured ? 'text-laranja-500' : 'text-tinta-suave hover:text-laranja-500'}">${ico(item.featured ? 'estrela' : 'estrela-vazia')}</button>
           <button data-action="delete-video" data-id="${item.id}" title="Excluir"
-                  class="material-symbols-outlined text-on-surface-variant hover:text-error p-1">delete</button>
+                  class="text-tinta-suave hover:text-error transition-colors p-1">${ico('excluir')}</button>
         </div>
       </article>`;
   }
