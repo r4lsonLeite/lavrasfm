@@ -15,7 +15,8 @@
     "watch:css": "tailwindcss -c tailwind.config.cjs -i src/tailwind.css -o public/css/tailwind.css --watch",
     "build": "npm run build:css",
     "test": "node --test test/*.test.js",
-    "senha": "node server/senha.js"
+    "senha": "node server/senha.js",
+    "build:ondas": "node ferramentas/gerar-ondas.mjs public/img/ondas.svg"
   },
   "dependencies": {
     "compression": "^1.8.1",
