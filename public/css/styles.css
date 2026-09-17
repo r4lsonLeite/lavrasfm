@@ -28,35 +28,39 @@
 /* --------------------------- ondas da identidade --------------------------- */
 
 /*
- * A arte de ondas da rádio entra como fundo das barras de topo e rodapé.
- * Por cima dela vai um véu azul: sem ele, o desenho colorido briga com o
- * texto branco e o menu fica ilegível.
+ * A arte de ondas da rádio emoldura a página inteira: o azul corre do topo ao
+ * rodapé e acompanha a rolagem, com o conteúdo sobre uma folha clara no meio.
+ *
+ * O desenho vai num pseudo-elemento fixo, e não no fundo do body, por dois
+ * motivos: `background-attachment: fixed` falha no Safari do iPhone, e assim a
+ * arte não é esticada quando a página fica longa.
  */
-.faixa-ondas {
-  position: relative;
+.moldura-ondas {
   background-color: #0b3f8f;
-  background-image: url('/img/ondas.svg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
-.faixa-ondas::before {
+.moldura-ondas::before {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
+  z-index: -1;
   pointer-events: none;
-  background: linear-gradient(100deg, rgba(9, 41, 105, 0.88) 0%, rgba(11, 63, 143, 0.6) 48%, rgba(11, 63, 143, 0.34) 100%);
+  background-color: #0b3f8f;
+  /*
+   * Duas camadas: o véu azul por cima da arte. Sem ele o desenho colorido
+   * briga com o texto branco do menu e do rodapé.
+   */
+  background-image:
+    linear-gradient(150deg, rgba(5, 32, 84, 0.9) 0%, rgba(11, 63, 143, 0.52) 45%, rgba(5, 32, 84, 0.86) 100%),
+    url('/img/ondas.svg');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 
-/* O rodapé pode mostrar mais da arte: ali não há menu para atrapalhar. */
-.faixa-ondas-rodape::before {
-  background: linear-gradient(100deg, rgba(9, 41, 105, 0.84) 0%, rgba(11, 63, 143, 0.5) 58%, rgba(11, 63, 143, 0.26) 100%);
-}
-
-.faixa-ondas > * {
-  position: relative;
-  z-index: 1;
+/* A folha do miolo: é ela que separa o conteúdo da moldura azul. */
+.folha {
+  box-shadow: 0 18px 50px rgba(3, 20, 54, 0.35);
 }
 
 /* ------------------------- barras do equalizador --------------------------- */
@@ -96,7 +100,7 @@ input[type='range'].volume {
   appearance: none;
   height: 4px;
   border-radius: 999px;
-  background: #e0e0e3;
+  background: rgba(255, 255, 255, 0.28);
   cursor: pointer;
 }
 input[type='range'].volume::-webkit-slider-thumb {

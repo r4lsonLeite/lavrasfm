@@ -1,6 +1,6 @@
 import express from 'express';
 import compression from 'compression';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,9 +16,13 @@ const { ensureAdminUser, sessionMiddleware, requireAuthPage } = await import('./
 const { db, getSettings } = await import('./db.js');
 const { registrarErro } = await import('./log.js');
 const { destinoInternoPermitido } = await import('./rede.js');
+const { criarEntregaDePaginas } = await import('./paginas.js');
 const { agendarBackups } = await import('./backup.js');
 
 const PUBLIC_DIR = join(raiz, 'public');
+// Páginas com versão carimbada no CSS e no JS, para um deploy não deixar o
+// visitante com HTML novo e folha de estilo antiga.
+const paginas = criarEntregaDePaginas(PUBLIC_DIR);
 const PORT = Number(process.env.PORT) || 3000;
 const EM_PRODUCAO = process.env.NODE_ENV === 'production';
 
@@ -150,7 +154,8 @@ function renderizarHome(req, res) {
   const descricao =
     settings.tagline || `${settings.station_name}: rádio ao vivo, notícias e vídeos.`;
 
-  const html = readFileSync(join(PUBLIC_DIR, 'index.html'), 'utf8')
+  const html = paginas
+    .html('index.html')
     .replaceAll('{{SITE_URL}}', escaparHtml(enderecoPublico(req)))
     .replaceAll('{{STATION_NAME}}', escaparHtml(settings.station_name))
     .replaceAll('{{DESCRIPTION}}', escaparHtml(descricao));
@@ -182,10 +187,10 @@ app.get('/sitemap.xml', (req, res) => {
 
 app.get('/login', (req, res) => {
   if (req.user) return res.redirect('/admin');
-  res.sendFile(join(PUBLIC_DIR, 'login.html'));
+  paginas.enviar(res, 'login.html');
 });
 
-app.get('/admin', requireAuthPage, (_req, res) => res.sendFile(join(PUBLIC_DIR, 'admin.html')));
+app.get('/admin', requireAuthPage, (_req, res) => paginas.enviar(res, 'admin.html'));
 
 /**
  * O painel e o login têm rotas próprias, com verificação de sessão. Servir os
@@ -203,24 +208,31 @@ app.use((req, res, next) => {
 app.use(
   express.static(PUBLIC_DIR, {
     extensions: ['html'],
-    // O HTML é revalidado sempre; CSS, JS e imagens podem ficar em cache por
-    // uma hora, já que uma mudança neles vem acompanhada de um deploy.
+    // O HTML é revalidado sempre. CSS e JS carregam versão no endereço e
+    // ficam em cache para sempre; as demais imagens, por uma hora.
     setHeaders(res, caminho) {
+      if (caminho.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+        return;
+      }
+      // CSS e JS são pedidos pelo HTML com ?v=<versão do conteúdo>, então o
+      // endereço muda sozinho a cada mudança: aqui o cache pode ser longo.
+      const versionado = /[\\/](?:css|js)[\\/]/.test(caminho);
       res.setHeader(
         'Cache-Control',
-        caminho.endsWith('.html') ? 'no-cache' : 'public, max-age=3600'
+        versionado ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
       );
     }
   })
 );
 
-app.use((_req, res) => res.status(404).sendFile(join(PUBLIC_DIR, '404.html')));
+app.use((_req, res) => paginas.enviar(res, '404.html', 404));
 
 // Último recurso: erro não tratado vira uma página legível, não uma tela branca.
 app.use((err, req, res, _next) => {
   registrarErro(`http ${req.method} ${req.originalUrl}`, err);
   if (res.headersSent) return res.end();
-  res.status(500).sendFile(join(PUBLIC_DIR, '500.html'));
+  paginas.enviar(res, '500.html', 500);
 });
 
 if (destinoInternoPermitido() && EM_PRODUCAO) {

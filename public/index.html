@@ -26,10 +26,10 @@
 <link href="/css/tailwind.css" rel="stylesheet">
 <link href="/css/styles.css" rel="stylesheet">
 </head>
-<body class="bg-fundo text-tinta font-body-md min-h-screen flex flex-col pb-24">
+<body class="moldura-ondas text-branco font-body-md min-h-screen flex flex-col pb-24">
 
 <!-- Cabeçalho -->
-<header class="faixa-ondas text-branco overflow-hidden">
+<header class="text-branco">
 
   <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop">
     <div class="flex items-center justify-between gap-6 py-4">
@@ -64,7 +64,8 @@
 </header>
 
 <main id="topo" class="flex-grow">
-  <div class="max-w-[1280px] w-full mx-auto px-margin-mobile md:px-margin-desktop py-6 md:py-8 flex flex-col gap-10">
+  <div class="max-w-[1320px] w-full mx-auto px-3 md:px-5">
+    <div class="folha bg-fundo text-tinta rounded-2xl px-margin-mobile md:px-margin-desktop py-6 md:py-8 flex flex-col gap-10">
 
     <!-- Capa: manchete + últimas notícias -->
     <section id="noticias" class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] gap-6">
@@ -83,11 +84,12 @@
       </div>
       <div data-video-slot></div>
     </section>
+    </div>
   </div>
 </main>
 
 <!-- Rodapé -->
-<footer id="contato" class="faixa-ondas faixa-ondas-rodape text-branco mt-10 overflow-hidden">
+<footer id="contato" class="text-branco mt-6">
 
   <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
     <div class="flex flex-col gap-3">
@@ -106,18 +108,18 @@
 </footer>
 
 <!-- Player fixo -->
-<div class="fixed bottom-0 left-0 w-full bg-branco text-tinta border-t border-borda z-50 shadow-player" data-player-bar>
+<div class="fixed bottom-0 left-0 w-full bg-gradiente-azul text-branco border-t border-white/15 z-50 shadow-player" data-player-bar>
   <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop h-20 flex items-center gap-4 md:gap-6">
 
     <img src="/img/marca.png" alt="" class="h-11 w-11 rounded-full shrink-0 hidden sm:block">
 
     <div class="min-w-0 flex-grow sm:flex-grow-0 sm:w-[240px]">
-      <div class="font-label-sm text-label-sm text-laranja-600 flex items-center gap-2 uppercase">
+      <div class="font-label-sm text-label-sm text-amarelo-300 flex items-center gap-2 uppercase">
         <span class="w-2 h-2 rounded-full bg-ao-vivo block animate-pulse"></span>
         <span data-player-status>Ao vivo</span>
       </div>
       <div class="font-body-md text-[15px] font-semibold truncate" data-now-playing>Programação Musical</div>
-      <div class="font-body-md text-[12px] text-tinta-suave truncate" data-station-name>LavrasFM</div>
+      <div class="font-body-md text-[12px] text-azul-100 truncate" data-station-name>LavrasFM</div>
     </div>
 
     <button data-play-toggle
@@ -127,20 +129,20 @@
     </button>
 
     <div class="hidden md:flex items-center gap-3 shrink-0">
-      <button data-mute-toggle class="text-tinta-suave hover:text-tinta transition" title="Silenciar" data-volume-icon data-icone="volume-alto"></button>
+      <button data-mute-toggle class="text-azul-100 hover:text-branco transition" title="Silenciar" data-volume-icon data-icone="volume-alto"></button>
       <input data-volume type="range" min="0" max="100" value="80" class="volume w-28" aria-label="Volume">
     </div>
 
-    <div class="hidden lg:flex flex-grow items-center gap-1 h-8 text-laranja-500" data-equalizer>
+    <div class="hidden lg:flex flex-grow items-center gap-1 h-8 text-amarelo-300" data-equalizer>
       <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
       <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
       <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
       <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
     </div>
 
-    <span class="hidden xl:block font-label-sm text-label-sm text-tinta-clara uppercase shrink-0" data-tagline-curta></span>
+    <span class="hidden xl:block font-label-sm text-label-sm text-azul-100 uppercase shrink-0" data-tagline-curta></span>
 
-    <button data-mute-toggle class="md:hidden text-tinta-suave shrink-0" title="Silenciar" data-volume-icon data-icone="volume-alto"></button>
+    <button data-mute-toggle class="md:hidden text-azul-100 shrink-0" title="Silenciar" data-volume-icon data-icone="volume-alto"></button>
   </div>
 </div>
 
