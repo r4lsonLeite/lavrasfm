@@ -25,14 +25,19 @@ window.lavrasTheme = {
         'laranja-400': '#fba91a',
         'amarelo-300': '#ffc63b',
 
-        /* Tinta e superfícies. */
-        tinta: '#10243f',
-        'tinta-media': '#33455e',
-        'tinta-suave': '#5a6a80',
-        'tinta-clara': '#8896a8',
-        borda: '#dde5ee',
-        'borda-forte': '#c3d1e0',
-        fundo: '#eef2f7',
+        /*
+         * Tinta e superfícies em cinza neutro. Cinza azulado somado ao azul do
+         * cabeçalho, do rodapé e do player deixava a página inteira puxando
+         * para o azul; o neutro devolve o contraste para a marca.
+         */
+        tinta: '#1c1f24',
+        'tinta-media': '#3f434a',
+        'tinta-suave': '#63676e',
+        'tinta-clara': '#8e9299',
+        borda: '#e5e5e7',
+        'borda-forte': '#d2d3d6',
+        fundo: '#f4f4f5',
+        'placa': '#ebebed',
         branco: '#ffffff',
 
         /* Sinal de transmissão ao vivo. */
@@ -42,23 +47,23 @@ window.lavrasTheme = {
         primary: '#073a86',
         'on-primary': '#ffffff',
         surface: '#ffffff',
-        'surface-container': '#eef2f7',
-        'surface-container-low': '#f6f9fc',
+        'surface-container': '#f4f4f5',
+        'surface-container-low': '#fafafa',
         'surface-container-lowest': '#ffffff',
-        'surface-container-high': '#e3eaf3',
-        'surface-variant': '#dde5ee',
-        'surface-dim': '#d7e0ea',
-        'on-surface': '#10243f',
-        'on-surface-variant': '#5a6a80',
-        'on-secondary-container': '#5a6a80',
-        outline: '#8896a8',
-        'outline-variant': '#dde5ee',
+        'surface-container-high': '#ebebed',
+        'surface-variant': '#e5e5e7',
+        'surface-dim': '#d2d3d6',
+        'on-surface': '#1c1f24',
+        'on-surface-variant': '#63676e',
+        'on-secondary-container': '#63676e',
+        outline: '#8e9299',
+        'outline-variant': '#e5e5e7',
         error: '#e8353b',
         'on-error': '#ffffff',
         'error-container': '#fde8e8',
         'on-error-container': '#a01a20',
-        background: '#eef2f7',
-        'on-background': '#10243f'
+        background: '#f4f4f5',
+        'on-background': '#1c1f24'
       },
 
       borderRadius: {

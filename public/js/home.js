@@ -58,7 +58,7 @@
 
   function mancheteHtml(item) {
     const foto = item.image_url
-      ? `<div class="relative aspect-[16/9] overflow-hidden rounded-xl bg-azul-100">
+      ? `<div class="relative aspect-[16/9] overflow-hidden rounded-xl bg-placa">
            <img src="${escapeHtml(item.image_url)}" alt="" loading="eager"
                 class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500">
            <div class="absolute top-4 left-4">${tarja(item.category)}</div>
@@ -133,7 +133,7 @@
         </div>
         ${
           item.image_url
-            ? `<div class="w-[84px] h-[64px] shrink-0 rounded-lg overflow-hidden bg-azul-100">
+            ? `<div class="w-[84px] h-[64px] shrink-0 rounded-lg overflow-hidden bg-placa">
                  <img src="${escapeHtml(item.image_url)}" alt="" loading="lazy" class="w-full h-full object-cover">
                </div>`
             : ''
@@ -159,7 +159,7 @@
 
   function cardHtml(item) {
     const foto = item.image_url
-      ? `<div class="aspect-[16/9] overflow-hidden rounded-lg bg-azul-100 mb-3">
+      ? `<div class="aspect-[16/9] overflow-hidden rounded-lg bg-placa mb-3">
            <img src="${escapeHtml(item.image_url)}" alt="" loading="lazy"
                 class="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500">
          </div>`
@@ -219,7 +219,7 @@
 
     return `
       <div class="bg-branco rounded-2xl shadow-carta overflow-hidden">
-        <div class="relative w-full aspect-video bg-azul-100" data-video-stage>${selo}${player}</div>
+        <div class="relative w-full aspect-video bg-placa" data-video-stage>${selo}${player}</div>
         <div class="p-5">
           <span class="font-label-sm text-label-sm text-laranja-600 uppercase block mb-1">
             ${video.is_live ? 'Transmissão ao vivo' : 'Vídeo em destaque'}
@@ -234,7 +234,7 @@
     return `
       <a href="${escapeHtml(video.watch_url)}" target="_blank" rel="noopener noreferrer"
          class="group flex gap-4 items-center bg-branco rounded-xl shadow-carta p-3">
-        <div class="w-28 shrink-0 aspect-video bg-azul-100 overflow-hidden rounded-lg relative">
+        <div class="w-28 shrink-0 aspect-video bg-placa overflow-hidden rounded-lg relative">
           <img src="https://i.ytimg.com/vi/${escapeHtml(video.youtube_id)}/mqdefault.jpg" alt="" loading="lazy"
                class="w-full h-full object-cover">
           ${video.is_live ? '<span class="absolute bottom-1 left-1 bg-ao-vivo text-branco font-label-sm text-[10px] px-1.5 py-0.5 rounded-full uppercase">Ao vivo</span>' : ''}

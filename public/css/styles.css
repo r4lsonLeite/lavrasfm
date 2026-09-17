@@ -25,25 +25,39 @@
   border-bottom-color: #fba91a;
 }
 
-/* --------------------------- ondas do fundo azul --------------------------- */
+/* --------------------------- ondas da identidade --------------------------- */
 
 /*
- * A identidade da rádio usa ondas sobrepostas. Desenhamos com gradientes em vez
- * de imagem: acompanha qualquer largura de tela e não pesa no carregamento.
+ * A arte de ondas da rádio entra como fundo das barras de topo e rodapé.
+ * Por cima dela vai um véu azul: sem ele, o desenho colorido briga com o
+ * texto branco e o menu fica ilegível.
  */
-.ondas-cabecalho,
-.ondas-rodape {
+.faixa-ondas {
+  position: relative;
+  background-color: #0b3f8f;
+  background-image: url('/img/ondas.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.faixa-ondas::before {
+  content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.5;
-  background-image:
-    radial-gradient(120% 90% at 82% -30%, rgba(251, 169, 26, 0.3) 0%, rgba(251, 169, 26, 0) 55%),
-    radial-gradient(90% 70% at 100% 120%, rgba(247, 134, 27, 0.28) 0%, rgba(247, 134, 27, 0) 60%),
-    radial-gradient(70% 120% at -10% 60%, rgba(31, 122, 232, 0.45) 0%, rgba(31, 122, 232, 0) 60%);
+  background: linear-gradient(100deg, rgba(9, 41, 105, 0.88) 0%, rgba(11, 63, 143, 0.6) 48%, rgba(11, 63, 143, 0.34) 100%);
 }
 
-.ondas-rodape { opacity: 0.4; }
+/* O rodapé pode mostrar mais da arte: ali não há menu para atrapalhar. */
+.faixa-ondas-rodape::before {
+  background: linear-gradient(100deg, rgba(9, 41, 105, 0.84) 0%, rgba(11, 63, 143, 0.5) 58%, rgba(11, 63, 143, 0.26) 100%);
+}
+
+.faixa-ondas > * {
+  position: relative;
+  z-index: 1;
+}
 
 /* ------------------------- barras do equalizador --------------------------- */
 
@@ -82,7 +96,7 @@ input[type='range'].volume {
   appearance: none;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+  background: #e0e0e3;
   cursor: pointer;
 }
 input[type='range'].volume::-webkit-slider-thumb {
