@@ -149,12 +149,26 @@ export function getSettings() {
   return settings;
 }
 
+/**
+ * O WhatsApp precisa do código do país para o link wa.me funcionar, e ninguém
+ * escreve o próprio número assim. "(88) 9 9257-3819" vira "5588992573819";
+ * um número que já venha com o 55, ou de outro país, passa intacto.
+ */
+export function normalizarWhatsapp(valor) {
+  const digitos = String(valor ?? '').replace(/\D/g, '');
+  if (!digitos) return '';
+  // 10 dígitos (fixo) ou 11 (celular com o 9) é número brasileiro sem o país.
+  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
+  return digitos;
+}
+
 export function saveSettings(patch) {
   const stmt = db.prepare(
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   );
   for (const [key, value] of Object.entries(patch)) {
-    if (key in DEFAULT_SETTINGS) stmt.run(key, String(value ?? ''));
+    if (!(key in DEFAULT_SETTINGS)) continue;
+    stmt.run(key, key === 'whatsapp' ? normalizarWhatsapp(value) : String(value ?? ''));
   }
   return getSettings();
 }
