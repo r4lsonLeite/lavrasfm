@@ -17,6 +17,9 @@ const { db, getSettings } = await import('./db.js');
 const { registrarErro } = await import('./log.js');
 const { destinoInternoPermitido } = await import('./rede.js');
 const { criarEntregaDePaginas } = await import('./paginas.js');
+const { getMateriaPorSlug, listMaterias } = await import('./content.js');
+const { resumir } = await import('./texto.js');
+const { arquivoDaImagem } = await import('./imagens.js');
 const { agendarBackups } = await import('./backup.js');
 
 const PUBLIC_DIR = join(raiz, 'public');
@@ -154,11 +157,11 @@ function renderizarHome(req, res) {
   const descricao =
     settings.tagline || `${settings.station_name}: rádio ao vivo, notícias e vídeos.`;
 
-  const html = paginas
-    .html('index.html')
-    .replaceAll('{{SITE_URL}}', escaparHtml(enderecoPublico(req)))
-    .replaceAll('{{STATION_NAME}}', escaparHtml(settings.station_name))
-    .replaceAll('{{DESCRIPTION}}', escaparHtml(descricao));
+  const html = paginas.preencher(paginas.html('index.html'), {
+    SITE_URL: escaparHtml(enderecoPublico(req)),
+    STATION_NAME: escaparHtml(settings.station_name),
+    DESCRIPTION: escaparHtml(descricao)
+  });
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache');
@@ -174,6 +177,80 @@ app.get('/', renderizarHome);
 app.get('/index.html', (_req, res) => res.redirect(301, '/'));
 
 // Mapa do site: só a home é pública e indexável.
+/**
+ * A matéria é montada no servidor, e não no navegador, por causa das
+ * metatags: WhatsApp, Facebook e buscadores leem o HTML como ele chega e não
+ * executam JavaScript. Preenchidas no cliente, a prévia do link viria vazia.
+ */
+app.get('/materia/:slug', (req, res, next) => {
+  const materia = getMateriaPorSlug(req.params.slug);
+  if (!materia) return next();
+
+  const settings = getSettings();
+  const base = enderecoPublico(req);
+  const resumo = materia.excerpt || `${materia.title} — ${settings.station_name}.`;
+  const escrito = Boolean(materia.excerpt) && materia.excerpt !== resumir(materia.body, 200);
+  const capa = materia.image_url
+    ? (materia.image_url.startsWith('/') ? base + materia.image_url : materia.image_url)
+    : `${base}/og-image.png`;
+
+  const html = paginas.preencher(paginas.html('materia.html'), {
+    SITE_URL: escaparHtml(base),
+    CANONICAL: escaparHtml(`${base}/materia/${materia.slug}`),
+    STATION_NAME: escaparHtml(settings.station_name),
+    TITLE: escaparHtml(materia.title),
+    DESCRIPTION: escaparHtml(resumo),
+    // O resumo gerado do próprio texto não vira linha de apoio: seria o
+    // primeiro parágrafo repetido logo acima dele. Ele continua valendo para
+    // o card na capa e para a prévia de compartilhamento, onde não há repetição.
+    EXCERPT_BLOCK: escrito
+      ? `<p class="font-body-md text-[17px] md:text-[19px] text-tinta-media leading-relaxed mt-4">${escaparHtml(materia.excerpt)}</p>`
+      : '',
+    CATEGORY: escaparHtml(materia.category),
+    OG_IMAGE: escaparHtml(capa),
+    PUBLISHED_ISO: escaparHtml(String(materia.published_at).replace(' ', 'T') + 'Z'),
+    PUBLISHED_LABEL: escaparHtml(dataPorExtenso(materia.published_at)),
+    SOURCE_BLOCK: materia.source
+      ? `<span class="inline-flex items-center gap-1.5">Por ${escaparHtml(materia.source)}</span>`
+      : '',
+    COVER_BLOCK: materia.image_url
+      ? `<figure class="mt-6">
+           <img src="${escaparHtml(materia.image_url)}" alt="${escaparHtml(materia.title)}"
+                class="w-full max-h-[560px] object-cover rounded-xl bg-placa">
+         </figure>`
+      : '',
+    // Já é HTML seguro: veio de paraHtml(), que escapa antes de formatar.
+    BODY_HTML: materia.body_html
+  });
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.send(html);
+});
+
+/** "16 de setembro de 2026" — a data como se lê, não como o banco guarda. */
+function dataPorExtenso(valor) {
+  const data = new Date(String(valor).replace(' ', 'T') + 'Z');
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleDateString('pt-BR', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Fortaleza'
+  });
+}
+
+/**
+ * As fotos enviadas pela redação ficam no disco permanente, fora de public/,
+ * que é substituído a cada deploy. O tipo vem do nome gerado pelo servidor,
+ * nunca do que o navegador declarou no envio.
+ */
+app.get('/uploads/:nome', (req, res, next) => {
+  const arquivo = arquivoDaImagem(req.params.nome);
+  if (!arquivo) return next();
+  res.setHeader('Content-Type', arquivo.tipo);
+  // O nome carrega um trecho aleatório: conteúdo novo é sempre endereço novo.
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.sendFile(arquivo.caminho);
+});
+
 app.get('/sitemap.xml', (req, res) => {
   const base = enderecoPublico(req);
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
@@ -181,6 +258,14 @@ app.get('/sitemap.xml', (req, res) => {
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
       `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
       `  <url><loc>${escaparHtml(base)}/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>\n` +
+      listMaterias()
+        .map(
+          (m) =>
+            `  <url><loc>${escaparHtml(`${base}/materia/${m.slug}`)}</loc>` +
+            `<lastmod>${escaparHtml(String(m.updated_at).slice(0, 10))}</lastmod>` +
+            `<changefreq>weekly</changefreq><priority>0.8</priority></url>\n`
+        )
+        .join('') +
       `</urlset>\n`
   );
 });

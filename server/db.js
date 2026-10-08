@@ -93,6 +93,32 @@ db.exec(`
 // "secundária" passou a ser "destaque".
 db.exec("UPDATE news SET highlight = 'destaque' WHERE highlight = 'secundaria'");
 
+/**
+ * Migração: a notícia deixou de ser só um link para fora.
+ *
+ * `kind` separa a matéria escrita aqui ('materia') do link para outro portal
+ * ('link', o que já existia). A matéria guarda o texto em `body` e o endereço
+ * em `slug`; nela a coluna `url` fica vazia — vazio não é nulo, então o
+ * NOT NULL antigo continua valendo e não foi preciso recriar a tabela, o que
+ * seria arriscado com conteúdo já publicado.
+ */
+function adicionarColuna(tabela, coluna, definicao) {
+  const existe = db
+    .prepare(`SELECT 1 FROM pragma_table_info(?) WHERE name = ?`)
+    .get(tabela, coluna);
+  if (!existe) db.exec(`ALTER TABLE ${tabela} ADD COLUMN ${coluna} ${definicao}`);
+}
+
+adicionarColuna('news', 'kind', "TEXT NOT NULL DEFAULT 'link'");
+adicionarColuna('news', 'body', "TEXT NOT NULL DEFAULT ''");
+adicionarColuna('news', 'slug', "TEXT NOT NULL DEFAULT ''");
+
+// Índice parcial: dois links podem ter slug vazio, duas matérias não podem
+// dividir o mesmo endereço.
+db.exec(
+  "CREATE UNIQUE INDEX IF NOT EXISTS idx_news_slug ON news(slug) WHERE slug != ''"
+);
+
 /** Valores padrão das configurações do site. */
 export const DEFAULT_SETTINGS = {
   station_name: 'LavrasFM',

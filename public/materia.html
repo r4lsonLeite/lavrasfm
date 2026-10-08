@@ -3,22 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>{{STATION_NAME}} — Rádio ao vivo</title>
+<title>{{TITLE}} — {{STATION_NAME}}</title>
 <meta name="description" content="{{DESCRIPTION}}">
-<link rel="canonical" href="{{SITE_URL}}/">
+<link rel="canonical" href="{{CANONICAL}}">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#0b4aa8">
 
 <!-- Prévia ao compartilhar no WhatsApp, Facebook, X e afins -->
-<meta property="og:type" content="website">
+<meta property="og:type" content="article">
 <meta property="og:site_name" content="{{STATION_NAME}}">
-<meta property="og:title" content="{{STATION_NAME}} — Rádio ao vivo">
+<meta property="og:title" content="{{TITLE}}">
 <meta property="og:description" content="{{DESCRIPTION}}">
-<meta property="og:url" content="{{SITE_URL}}/">
-<meta property="og:image" content="{{SITE_URL}}/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:url" content="{{CANONICAL}}">
+<meta property="og:image" content="{{OG_IMAGE}}">
 <meta property="og:locale" content="pt_BR">
+<meta property="article:published_time" content="{{PUBLISHED_ISO}}">
 <meta name="twitter:card" content="summary_large_image">
 
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -67,34 +66,40 @@
 
 <main id="topo" class="flex-grow">
   <div class="max-w-[1320px] w-full mx-auto px-3 md:px-5">
-    <div class="folha bg-fundo text-tinta rounded-2xl px-margin-mobile md:px-margin-desktop py-6 md:py-8 flex flex-col gap-10">
+    <div class="folha bg-fundo text-tinta rounded-2xl px-margin-mobile md:px-margin-desktop py-6 md:py-8">
 
-    <!-- Capa: manchete + últimas notícias -->
-    <section id="noticias" class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] gap-6">
-      <div data-manchete></div>
-      <aside data-ultimas></aside>
-    </section>
+      <article class="max-w-[760px] mx-auto">
+        <nav class="font-label-sm text-label-sm uppercase mb-4 flex items-center gap-2 text-tinta-suave">
+          <a href="/" class="hover:text-azul-700 transition-colors">Início</a>
+          <span aria-hidden="true">›</span>
+          <span class="text-laranja-600">{{CATEGORY}}</span>
+        </nav>
 
-    <!-- Demais notícias -->
-    <section data-grade-noticias></section>
+        <h1 class="font-display text-[30px] md:text-[42px] leading-[1.1] font-extrabold text-tinta">{{TITLE}}</h1>
 
-    <!-- Programação da rádio -->
-    <section id="programacao">
-      <div class="flex items-center gap-4 mb-5">
-        <h2 class="font-display text-[22px] font-extrabold text-tinta uppercase tracking-tight">Programação</h2>
-        <span class="h-1 flex-grow bg-gradiente-laranja rounded-full max-w-[120px]"></span>
-      </div>
-      <div data-programacao></div>
-    </section>
+        {{EXCERPT_BLOCK}}
 
-    <!-- Vídeos e lives -->
-    <section id="videos">
-      <div class="flex items-center gap-4 mb-5">
-        <h2 class="font-display text-[22px] font-extrabold text-tinta uppercase tracking-tight">Vídeos &amp; Lives</h2>
-        <span class="h-1 flex-grow bg-gradiente-laranja rounded-full max-w-[120px]"></span>
-      </div>
-      <div data-video-slot></div>
-    </section>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 font-body-md text-[13px] text-tinta-suave border-y border-borda py-3 mt-5">
+          <span class="inline-flex items-center gap-1.5" data-icone="calendario" data-icone-tamanho="15"></span>
+          <span class="-ml-4">{{PUBLISHED_LABEL}}</span>
+          {{SOURCE_BLOCK}}
+          <span class="flex-grow"></span>
+          <span class="flex items-center gap-2" data-compartilhar></span>
+        </div>
+
+        {{COVER_BLOCK}}
+
+        <div class="materia mt-6">{{BODY_HTML}}</div>
+
+        <div class="border-t border-borda mt-10 pt-5 flex flex-wrap items-center gap-4 justify-between">
+          <a href="/#noticias"
+             class="font-label-sm text-label-sm uppercase text-azul-700 hover:text-azul-500 transition-colors inline-flex items-center gap-2">
+            Ver mais notícias
+          </a>
+          <span class="flex items-center gap-2" data-compartilhar></span>
+        </div>
+      </article>
+
     </div>
   </div>
 </main>
@@ -160,6 +165,6 @@
 <script src="/js/icones.js"></script>
 <script src="/js/comum.js"></script>
 <script src="/js/player.js"></script>
-<script src="/js/home.js"></script>
+<script src="/js/materia.js"></script>
 </body>
 </html>

@@ -149,6 +149,42 @@ input[type='range'].volume::-moz-range-thumb {
 .rede-link     { background: #8896a8; }
 .rede-copiado  { background: #1f9d55; }
 
+/* ----------------------------- texto da matéria ---------------------------- */
+
+/*
+ * O corpo da matéria é gerado pelo servidor a partir do que a redação
+ * escreve, então o estilo vai por elemento: não há classe para pendurar em
+ * cada parágrafo.
+ */
+.materia {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.75;
+  color: #2a2e34;
+}
+.materia > * + * { margin-top: 1.1em; }
+
+.materia h2 {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-size: 23px;
+  line-height: 1.25;
+  font-weight: 800;
+  color: #1c1f24;
+  margin-top: 1.8em;
+}
+
+.materia a {
+  color: #0b4aa8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.materia a:hover { color: #1f7ae8; }
+
+.materia strong { font-weight: 700; color: #1c1f24; }
+
+.materia ul { padding-left: 1.3em; list-style: disc; }
+.materia li + li { margin-top: 0.4em; }
+
 /* -------------------------------- utilidades ------------------------------- */
 
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

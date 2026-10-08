@@ -30,6 +30,10 @@ services:
         value: /var/dados/lavrasfm.db
       - key: BACKUP_DIR
         value: /var/dados/backups
+      # As fotos enviadas pela redação ficam no disco permanente, junto do
+      # banco. Em public/ elas seriam apagadas a cada deploy.
+      - key: UPLOAD_DIR
+        value: /var/dados/uploads
       - key: LOG_DIR
         value: /var/dados/logs
       - key: NODE_VERSION

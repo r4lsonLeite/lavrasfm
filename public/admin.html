@@ -59,18 +59,25 @@
         </div>
         <input type="hidden" name="id">
 
-        <label class="flex flex-col gap-1">
+        <fieldset class="flex flex-col gap-2 border border-outline-variant rounded-DEFAULT p-4">
+          <legend class="font-label-sm text-label-sm text-on-surface-variant uppercase px-1">O que é</legend>
+          <div id="news-kind-options" class="flex flex-col gap-2"></div>
+        </fieldset>
+
+        <label class="flex flex-col gap-1" data-se="link">
           <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Link da notícia *</span>
           <input name="url" type="url" required placeholder="https://portal.com.br/materia"
                  class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
           <span class="font-label-sm text-label-sm text-on-surface-variant">O card leva o visitante direto para esse endereço.</span>
         </label>
 
-        <button type="button" id="buscar-noticia"
-                class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
-          <span data-icone="baixar" data-icone-tamanho="17"></span> Buscar título, resumo e foto
-        </button>
-        <div id="buscar-resultado" class="hidden font-label-sm text-label-sm px-4 py-3 rounded-DEFAULT"></div>
+        <div data-se="link" class="flex flex-col gap-4">
+          <button type="button" id="buscar-noticia"
+                  class="border border-outline-variant font-label-sm text-label-sm px-4 py-3 rounded hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 w-full">
+            <span data-icone="baixar" data-icone-tamanho="17"></span> Buscar título, resumo e foto
+          </button>
+          <div id="buscar-resultado" class="hidden font-label-sm text-label-sm px-4 py-3 rounded-DEFAULT"></div>
+        </div>
 
         <div id="imagem-previa" class="hidden flex flex-col gap-2">
           <img id="imagem-previa-img" alt="Prévia da foto da notícia"
@@ -108,11 +115,49 @@
                     class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0"></textarea>
         </label>
 
-        <label class="flex flex-col gap-1">
-          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Imagem (URL)</span>
-          <input name="image_url" type="url" placeholder="https://..."
-                 class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
-        </label>
+        <fieldset class="flex flex-col gap-3 border border-outline-variant rounded-DEFAULT p-4">
+          <legend class="font-label-sm text-label-sm text-on-surface-variant uppercase px-1">Foto de capa</legend>
+
+          <label for="foto-arquivo"
+                 class="border border-dashed border-outline-variant rounded-DEFAULT px-4 py-5 text-center cursor-pointer hover:border-primary hover:text-primary transition-colors flex flex-col items-center gap-2">
+            <span data-icone="baixar" data-icone-tamanho="22"></span>
+            <span class="font-body-md text-body-md" id="foto-rotulo">Escolher uma foto do computador</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant">
+              JPEG, PNG ou WebP. Fotos grandes são reduzidas aqui mesmo antes de subir.
+            </span>
+          </label>
+          <input id="foto-arquivo" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
+
+          <div id="foto-progresso" class="hidden font-label-sm text-label-sm px-3 py-2 rounded-DEFAULT"></div>
+
+          <label class="flex flex-col gap-1">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">ou um endereço de foto</span>
+            <input name="image_url" placeholder="https://..."
+                   class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+          </label>
+        </fieldset>
+
+        <div data-se="materia" class="flex flex-col gap-2">
+          <div class="flex items-end justify-between gap-3">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Texto da matéria *</span>
+            <button type="button" id="materia-previa"
+                    class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline">Ver prévia</button>
+          </div>
+          <textarea name="body" rows="16" maxlength="50000" placeholder="Escreva aqui a matéria."
+                    class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0 leading-relaxed"></textarea>
+          <p class="font-label-sm text-label-sm text-on-surface-variant">
+            Deixe uma linha em branco entre os parágrafos.
+            <code>## Subtítulo</code> em linha própria,
+            <code>- item</code> para lista,
+            <code>**negrito**</code>,
+            <code>*itálico*</code> e
+            <code>[texto](https://endereço)</code> para link.
+          </p>
+          <div id="materia-previa-caixa" class="hidden border border-outline-variant rounded-DEFAULT p-4 bg-surface-container-lowest">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase block mb-2">Prévia</span>
+            <div class="materia" id="materia-previa-conteudo"></div>
+          </div>
+        </div>
 
         <fieldset class="flex flex-col gap-2 border border-outline-variant rounded-DEFAULT p-4">
           <legend class="font-label-sm text-label-sm text-on-surface-variant uppercase px-1">Como destacar</legend>

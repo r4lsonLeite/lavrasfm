@@ -43,6 +43,16 @@
 
   const ico = (nome, tamanho = 15) => window.LavrasIcones?.icone(nome, tamanho) ?? '';
 
+  /**
+   * Para onde o card leva. A matéria é página daqui e abre na mesma aba; o
+   * link de outro portal abre em aba nova, para o visitante não perder a rádio
+   * que está ouvindo — recarregar a página corta o áudio.
+   */
+  const destino = (item) =>
+    item.is_materia
+      ? `href="${escapeHtml(item.link)}"`
+      : `href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer"`;
+
   const relogio = (item) => `
     <span class="inline-flex items-center gap-1.5 text-tinta-suave">
       ${ico('relogio')}${escapeHtml(tempoRelativo(item.published_at))}
@@ -68,7 +78,7 @@
 
     return `
       <article class="bg-branco rounded-2xl shadow-carta overflow-hidden">
-        <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="group block p-4 md:p-5">
+        <a ${destino(item)} class="group block p-4 md:p-5">
           ${foto}
           <h1 class="font-display text-display-lg-mobile md:text-display-lg text-tinta mt-5 group-hover:text-azul-700 transition-colors">
             ${escapeHtml(item.title)}
@@ -90,7 +100,9 @@
 
   /** Botões de compartilhar: WhatsApp, Facebook, X e copiar o link. */
   function compartilharHtml(item) {
-    const url = encodeURIComponent(item.url);
+    // O link da matéria é relativo; quem compartilha precisa do endereço inteiro.
+    const absoluto = new URL(item.link, window.location.origin).href;
+    const url = encodeURIComponent(absoluto);
     const titulo = encodeURIComponent(item.title);
     const redes = [
       ['WhatsApp', `https://wa.me/?text=${titulo}%20${url}`, 'whatsapp'],
@@ -110,7 +122,7 @@
              class="rede rede-${marca}">${ico(marca, 16)}</a>`
           )
           .join('')}
-        <button type="button" data-copiar="${escapeHtml(item.url)}" title="Copiar o link"
+        <button type="button" data-copiar="${escapeHtml(absoluto)}" title="Copiar o link"
                 class="rede rede-link">${ico('link', 16)}</button>
       </div>`;
   }
@@ -121,7 +133,7 @@
     const linhas = itens
       .map(
         (item) => `
-      <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"
+      <a ${destino(item)}
          class="group flex gap-4 items-start py-4 border-b border-borda last:border-0">
         <div class="min-w-0 flex-grow">
           <span class="font-label-sm text-label-sm text-laranja-600 uppercase block mb-1">${escapeHtml(item.category)}</span>
@@ -167,7 +179,7 @@
       : '<div class="h-1.5 w-14 bg-gradiente-laranja rounded-full mb-3"></div>';
 
     return `
-      <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"
+      <a ${destino(item)}
          class="group bg-branco rounded-xl shadow-carta p-4 flex flex-col">
         ${foto}
         <span class="font-label-sm text-label-sm text-laranja-600 uppercase mb-1">${escapeHtml(item.category)}</span>
@@ -421,41 +433,8 @@
 
   /* -------------------------------- configurações ----------------------------- */
 
-  function aplicarConfiguracoes(settings) {
-    document.title = `${settings.station_name} — Rádio ao vivo`;
-    document.querySelectorAll('[data-station-name]').forEach((el) => {
-      el.textContent = settings.station_name;
-    });
-    document.querySelectorAll('[data-tagline]').forEach((el) => {
-      el.textContent = settings.tagline;
-    });
-    document.querySelectorAll('[data-tagline-curta]').forEach((el) => {
-      el.textContent = settings.tagline;
-    });
-    const rodape = document.querySelector('[data-footer-text]');
-    if (rodape) rodape.textContent = settings.footer_text;
-
-    const social = document.querySelector('[data-social-links]');
-    if (social) {
-      const links = [
-        ['Instagram', settings.instagram],
-        ['Facebook', settings.facebook],
-        ['YouTube', settings.youtube_channel],
-        ['WhatsApp', settings.whatsapp && `https://wa.me/${String(settings.whatsapp).replace(/\D/g, '')}`],
-        ['E-mail', settings.contact_email && `mailto:${settings.contact_email}`]
-      ].filter(([, href]) => href);
-
-      social.innerHTML = links
-        .map(
-          ([rotulo, href]) =>
-            `<a class="font-label-sm text-label-sm uppercase text-branco/90 hover:text-branco border-b-2 border-transparent hover:border-laranja-400 transition-colors pb-0.5"
-                href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${rotulo}</a>`
-        )
-        .join('');
-    }
-
-    window.LavrasPlayer?.setStreamUrl(settings.stream_url);
-  }
+  // Compartilhado com a página da matéria — veja public/js/comum.js.
+  const aplicarConfiguracoes = (settings) => window.LavrasSite.aplicarConfiguracoes(settings);
 
   /* --------------------------------- interações ------------------------------- */
 

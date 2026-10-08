@@ -49,6 +49,18 @@ export function criarEntregaDePaginas(PUBLIC_DIR) {
     return conteudo;
   }
 
+  /**
+   * Troca os {{MARCADORES}} da página pelos valores informados, numa passagem
+   * só. Em passagens encadeadas, um valor que por acaso contivesse outro
+   * marcador seria substituído junto — num texto escrito pela redação, isso
+   * deixa de ser hipótese.
+   */
+  function preencher(html, valores) {
+    return html.replace(/\{\{(\w+)\}\}/g, (tudo, chave) =>
+      chave in valores ? String(valores[chave] ?? '') : tudo
+    );
+  }
+
   function enviar(res, nome, status = 200) {
     res.status(status);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -56,5 +68,5 @@ export function criarEntregaDePaginas(PUBLIC_DIR) {
     res.send(html(nome));
   }
 
-  return { html, enviar, versao };
+  return { html, enviar, versao, preencher };
 }

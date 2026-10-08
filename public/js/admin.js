@@ -152,6 +152,150 @@
       .join('');
   }
 
+  /* ----------------------- tipo da notícia (redação) ----------------------- */
+
+  function renderNewsKindOptions() {
+    $('#news-kind-options').innerHTML = Object.entries(options.newsKinds || {})
+      .map(
+        ([valor, info], indice) => `
+        <label class="flex items-start gap-2 cursor-pointer">
+          <input type="radio" name="kind" value="${escapeHtml(valor)}" ${indice === 0 ? 'checked' : ''}
+                 class="mt-1 border-outline-variant text-primary focus:ring-primary">
+          <span>
+            <span class="font-body-md text-body-md block">${escapeHtml(info.label)}</span>
+            <span class="font-label-sm text-label-sm text-on-surface-variant">${escapeHtml(info.description)}</span>
+          </span>
+        </label>`
+      )
+      .join('');
+  }
+
+  const tipoDeNoticia = () =>
+    newsForm.querySelector('input[name=kind]:checked')?.value || 'link';
+
+  /**
+   * Mostra só os campos do tipo escolhido.
+   *
+   * Tirar o `required` do campo escondido é obrigatório: o navegador recusa
+   * enviar um formulário com campo obrigatório vazio, e um campo escondido
+   * nessa situação trava o envio sem mostrar erro nenhum.
+   */
+  function alternarTipoNoticia() {
+    const tipo = tipoDeNoticia();
+    $$('[data-se]', newsForm).forEach((bloco) => {
+      bloco.classList.toggle('hidden', bloco.dataset.se !== tipo);
+    });
+    newsForm.elements.url.required = tipo === 'link';
+    newsForm.elements.body.required = tipo === 'materia';
+  }
+
+  newsForm.addEventListener('change', (event) => {
+    if (event.target.name === 'kind') alternarTipoNoticia();
+  });
+
+  /* ------------------------------ foto de capa ------------------------------ */
+
+  /**
+   * Reduz a foto no próprio navegador antes de subir. Uma foto de celular tem
+   * 4 ou 5 MB e 4000 pixels de largura; na página ela nunca passa de 1600.
+   * Subir o arquivo inteiro gastaria a internet de quem envia e o disco do
+   * servidor à toa.
+   */
+  async function reduzirFoto(arquivo, maiorLado = 1600, qualidade = 0.82) {
+    const bitmap = await createImageBitmap(arquivo);
+    const escala = Math.min(1, maiorLado / Math.max(bitmap.width, bitmap.height));
+
+    // Já está pequena: sobe como veio, preservando transparência de PNG.
+    if (escala === 1 && arquivo.size <= 1.5 * 1024 * 1024) {
+      bitmap.close();
+      return arquivo;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * escala);
+    canvas.height = Math.round(bitmap.height * escala);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return new Promise((pronto) => canvas.toBlob(pronto, 'image/jpeg', qualidade));
+  }
+
+  const emKB = (bytes) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+  function avisoFoto(texto, kind) {
+    const caixa = $('#foto-progresso');
+    caixa.textContent = texto;
+    caixa.className =
+      'font-label-sm text-label-sm px-3 py-2 rounded-DEFAULT ' +
+      (kind === 'error'
+        ? 'bg-error-container text-on-error-container'
+        : 'bg-surface-container text-on-surface');
+  }
+
+  $('#foto-arquivo').addEventListener('change', async (event) => {
+    const arquivo = event.target.files?.[0];
+    if (!arquivo) return;
+
+    avisoFoto('Preparando a foto…', 'ok');
+    try {
+      const reduzida = await reduzirFoto(arquivo);
+      avisoFoto(`Enviando (${emKB(reduzida.size)})…`, 'ok');
+
+      const resposta = await fetch('/api/admin/uploads', {
+        method: 'POST',
+        headers: { 'Content-Type': reduzida.type || 'image/jpeg' },
+        body: reduzida
+      });
+      if (resposta.status === 401) {
+        window.location.href = '/login';
+        return;
+      }
+      const dados = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(dados.error || 'Não consegui enviar a foto.');
+
+      newsForm.elements.image_url.value = dados.imagem.url;
+      mostrarPreviaImagem();
+      $('#foto-rotulo').textContent = 'Escolher outra foto';
+      avisoFoto(
+        `Foto enviada — ${emKB(arquivo.size)} viraram ${emKB(dados.imagem.bytes)}.`,
+        'ok'
+      );
+    } catch (erro) {
+      avisoFoto(
+        erro.name === 'InvalidStateError' || /decode|image/i.test(erro.message)
+          ? 'Não consegui abrir esse arquivo como imagem. Escolha um JPEG, PNG ou WebP.'
+          : erro.message,
+        'error'
+      );
+    } finally {
+      // Permite reenviar o mesmo arquivo depois de um erro.
+      event.target.value = '';
+    }
+  });
+
+  /* ---------------------- prévia do texto da matéria ------------------------ */
+
+  $('#materia-previa').addEventListener('click', async () => {
+    const caixa = $('#materia-previa-caixa');
+    if (!caixa.classList.contains('hidden')) {
+      caixa.classList.add('hidden');
+      $('#materia-previa').textContent = 'Ver prévia';
+      return;
+    }
+    try {
+      // A conversão vem do servidor: é a mesma que monta a página publicada.
+      const { html } = await api('/admin/texto/previa', {
+        method: 'POST',
+        body: { body: newsForm.elements.body.value }
+      });
+      $('#materia-previa-conteudo').innerHTML =
+        html || '<p class="text-on-surface-variant">Nada escrito ainda.</p>';
+      caixa.classList.remove('hidden');
+      $('#materia-previa').textContent = 'Esconder prévia';
+    } catch (erro) {
+      toast(erro.message, 'error');
+    }
+  });
+
   function newsRow(item) {
     const badge = item.active
       ? '<span class="font-label-sm text-label-sm px-2 py-1 rounded bg-surface-container text-on-surface">PUBLICADA</span>'
@@ -164,11 +308,16 @@
           <div class="flex flex-wrap items-center gap-2 mb-1">
             <span class="font-label-sm text-label-sm text-on-surface-variant">${escapeHtml(item.category)}</span>
             <span class="font-label-sm text-label-sm px-2 py-1 rounded bg-primary text-on-primary">${escapeHtml(item.highlight_label)}</span>
+            ${
+              item.is_materia
+                ? '<span class="font-label-sm text-label-sm px-2 py-1 rounded bg-laranja-500 text-branco">MATÉRIA NOSSA</span>'
+                : ''
+            }
             ${badge}
           </div>
           <h3 class="font-body-lg text-body-lg font-bold text-primary line-clamp-2">${escapeHtml(item.title)}</h3>
-          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"
-             class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline break-all">${escapeHtml(item.url)}</a>
+          <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer"
+             class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline break-all">${escapeHtml(item.link)}</a>
           <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">
             ${escapeHtml(formatDate(item.published_at))} · ordem ${item.position}
           </p>
@@ -199,8 +348,13 @@
     newsForm.reset();
     $('#buscar-resultado').classList.add('hidden');
     $('#imagem-previa').classList.add('hidden');
+    $('#foto-progresso').classList.add('hidden');
+    $('#materia-previa-caixa').classList.add('hidden');
+    $('#materia-previa').textContent = 'Ver prévia';
+    $('#foto-rotulo').textContent = 'Escolher uma foto do computador';
     newsForm.elements.id.value = '';
     newsForm.elements.active.checked = true;
+    alternarTipoNoticia();
     $('#news-form-title').textContent = 'Nova notícia';
     $('#news-reset').classList.add('hidden');
   }
@@ -334,6 +488,8 @@
       if (button.dataset.action === 'edit-news' && item) {
         fillForm(newsForm, { ...item, published_at: toLocalInput(item.published_at) });
         newsForm.elements.id.value = item.id;
+        alternarTipoNoticia();
+        mostrarPreviaImagem();
         $('#news-form-title').textContent = 'Editando notícia';
         $('#news-reset').classList.remove('hidden');
         newsForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -918,7 +1074,9 @@
       $('#current-user').textContent = user.username;
       options = opts;
       renderHighlightOptions();
+      renderNewsKindOptions();
       renderDiasCheckboxes();
+      alternarTipoNoticia();
 
       await Promise.all([loadNews(), loadVideos(), loadPrograms(), loadSettings()]);
 

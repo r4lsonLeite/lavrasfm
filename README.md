@@ -236,6 +236,15 @@ Decisões que valem conhecer antes de mexer no código:
   senha encerra as demais sessões.
 - **Segurança dos formulários**: só links `http`/`https` são aceitos e todo
   conteúdo é escapado antes de ir para a tela.
+- **Fotos da redação**: ficam em `UPLOAD_DIR` (no Render, `/var/dados/uploads`),
+  no disco permanente e fora de `public/`, que é substituído a cada deploy. O
+  formato é conferido pelos primeiros bytes do arquivo, não pela extensão, e o
+  nome é gerado pelo servidor. SVG é recusado de propósito: é o único formato
+  de imagem que pode conter script.
+- **O backup não inclui as fotos**: `server/backup.js` copia só o banco. Ele
+  protege contra o banco corromper, não contra o disco sumir — as cópias ficam
+  no mesmo disco. Se as fotos passarem a ser muitas, vale uma cópia para fora
+  do servidor.
 - **`npm audit` e as dependências de desenvolvimento**: o que vai para
   produção (`npm audit --omit=dev`) fica sem nenhum aviso, e a verificação
   automática falha se deixar de ficar. Sobram avisos na cadeia de build do

@@ -1,12 +1,14 @@
-import { Router } from 'express';
+import { Router, raw } from 'express';
 import { statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { resolveStreamUrl, probeStream, StreamError } from '../stream.js';
 import { lerArtigo, ArtigoError } from '../artigo.js';
+import { paraHtml } from '../texto.js';
 import { buscarComDestinoSeguro, exigirDestinoPublico, RedeBloqueadaError } from '../rede.js';
 import { getSettings, saveSettings, DEFAULT_SETTINGS, DB_PATH } from '../db.js';
 import {
   HIGHLIGHTS,
+  NEWS_KINDS,
   VIDEO_KINDS,
   ValidationError,
   listNews,
@@ -31,6 +33,13 @@ import {
   proximoNoAr,
   agoraNaRadio
 } from '../programacao.js';
+import {
+  guardarImagem,
+  apagarImagem,
+  ImagemError,
+  TIPOS_ACEITOS,
+  TAMANHO_MAXIMO
+} from '../imagens.js';
 import {
   requireAuth,
   throttleLogin,
@@ -269,11 +278,57 @@ admin.use((_req, res, next) => {
 admin.get('/options', (_req, res) =>
   res.json({
     highlights: HIGHLIGHTS,
+    newsKinds: NEWS_KINDS,
     videoKinds: VIDEO_KINDS,
     dias: DIAS,
     settingKeys: Object.keys(DEFAULT_SETTINGS)
   })
 );
+
+/**
+ * Envio da foto de capa.
+ *
+ * O corpo chega cru, sem multipart: o painel manda o arquivo direto como
+ * corpo da requisição. Isso evita uma dependência só para separar as partes
+ * de um formulário, e não perde nada — é um arquivo só por vez.
+ *
+ * O limite aqui é maior que o do módulo de imagens de propósito: queremos
+ * receber o arquivo grande demais para poder explicar o tamanho a quem
+ * enviou, em vez de a conexão morrer sem mensagem.
+ */
+admin.post(
+  '/uploads',
+  raw({ type: TIPOS_ACEITOS, limit: TAMANHO_MAXIMO + 1024 * 1024 }),
+  (req, res, next) => {
+    try {
+      if (!Buffer.isBuffer(req.body)) {
+        throw new ImagemError(
+          'Envie a foto como JPEG, PNG ou WebP. O tipo informado não é de imagem.'
+        );
+      }
+      res.status(201).json({ imagem: guardarImagem(req.body) });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * Prévia do texto da matéria.
+ *
+ * A conversão acontece no servidor, e não no navegador, de propósito: é a
+ * mesma função que vai gerar a página publicada, então o que o jornalista vê
+ * na prévia é exatamente o que sai. Uma segunda implementação no cliente
+ * acabaria divergindo.
+ */
+admin.post('/texto/previa', (req, res) => {
+  res.json({ html: paraHtml(String(req.body?.body ?? '').slice(0, 50000)) });
+});
+
+/** Descarta uma foto recém-enviada que o responsável decidiu trocar. */
+admin.delete('/uploads', (req, res) => {
+  res.json({ ok: apagarImagem(req.body?.url) });
+});
 
 /** Lê título, resumo, foto e fonte direto da página da notícia. */
 admin.post('/news/preview', async (req, res, next) => {
@@ -399,6 +454,16 @@ api.use((err, _req, res, _next) => {
   }
   if (err instanceof ValidationError || err?.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });
+  }
+  if (err instanceof ImagemError || err?.name === 'ImagemError') {
+    return res.status(400).json({ error: err.message });
+  }
+  // O corpo grande demais é barrado pelo express antes de chegar ao módulo de
+  // imagens, e sem este caso viraria um 500 sem explicação.
+  if (err?.type === 'entity.too.large') {
+    return res.status(413).json({
+      error: `A foto é grande demais. O limite é ${Math.round(TAMANHO_MAXIMO / 1024 / 1024)} MB.`
+    });
   }
   console.error('[api]', err);
   res.status(500).json({ error: 'Erro interno do servidor.' });
