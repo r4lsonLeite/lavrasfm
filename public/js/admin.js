@@ -719,6 +719,169 @@
     }, 5000);
   });
 
+  /* ------------------------------ programação ------------------------------- */
+
+  const programForm = $('#program-form');
+  let programCache = [];
+
+  function renderDiasCheckboxes() {
+    $('#program-dias').innerHTML = (options.dias || [])
+      .map(
+        (dia) => `
+        <label class="flex items-center gap-1.5 cursor-pointer border border-outline-variant rounded-DEFAULT px-3 py-2">
+          <input type="checkbox" data-dia value="${escapeHtml(dia.valor)}"
+                 class="rounded-DEFAULT border-outline-variant text-primary focus:ring-primary">
+          <span class="font-body-md text-body-md">${escapeHtml(dia.curto)}</span>
+        </label>`
+      )
+      .join('');
+  }
+
+  const diasMarcados = () =>
+    $$('#program-dias input[data-dia]')
+      .filter((caixa) => caixa.checked)
+      .map((caixa) => caixa.value)
+      .join('');
+
+  function marcarDias(digitos) {
+    const escolhidos = String(digitos || '');
+    $$('#program-dias input[data-dia]').forEach((caixa) => {
+      caixa.checked = escolhidos.includes(caixa.value);
+    });
+  }
+
+  $('#program-form').addEventListener('click', (event) => {
+    const atalho = event.target.closest('[data-dias-atalho]');
+    if (atalho) marcarDias(atalho.dataset.diasAtalho);
+  });
+
+  /** Mostra a foto do locutor, para o responsável ver se o link está certo. */
+  function mostrarPreviaLocutor() {
+    const caixa = $('#locutor-previa');
+    const valor = programForm.elements.presenter_photo.value.trim();
+    if (!valor) {
+      caixa.classList.add('hidden');
+      $('#locutor-aviso').classList.add('hidden');
+      return;
+    }
+    $('#locutor-aviso').classList.add('hidden');
+    $('#locutor-previa-img').src = valor;
+    caixa.classList.remove('hidden');
+  }
+
+  programForm.elements.presenter_photo.addEventListener('input', mostrarPreviaLocutor);
+  $('#locutor-previa-img').addEventListener('error', () => {
+    const aviso = $('#locutor-aviso');
+    aviso.textContent =
+      'Essa foto não carregou. O endereço precisa ser o da imagem em si (termina em .jpg, .png ou .webp).';
+    aviso.classList.remove('hidden');
+  });
+  $('#locutor-previa-img').addEventListener('load', () => {
+    $('#locutor-aviso').classList.add('hidden');
+  });
+
+  function programRow(item) {
+    const retrato = item.presenter_photo
+      ? `<img src="${escapeHtml(item.presenter_photo)}" alt="" class="w-14 h-14 rounded-full object-cover shrink-0 hidden sm:block">`
+      : `<span class="w-14 h-14 rounded-full bg-surface-container shrink-0 hidden sm:flex items-center justify-center text-on-surface-variant">${ico('relogio', 22)}</span>`;
+
+    return `
+      <article class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex gap-4 items-center">
+        ${retrato}
+        <div class="flex-grow min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="font-label-sm text-label-sm px-2 py-1 rounded bg-surface-container text-on-surface">${escapeHtml(item.days_label)}</span>
+            <span class="font-label-sm text-label-sm px-2 py-1 rounded bg-primary text-on-primary">${escapeHtml(item.schedule_label)}</span>
+            ${item.crosses_midnight ? '<span class="font-label-sm text-label-sm px-2 py-1 rounded border border-outline-variant">VIRA A NOITE</span>' : ''}
+            ${item.active ? '' : '<span class="font-label-sm text-label-sm px-2 py-1 rounded bg-error-container text-on-error-container">OCULTO</span>'}
+          </div>
+          <h3 class="font-body-lg text-body-lg font-bold text-primary truncate">${escapeHtml(item.name)}</h3>
+          ${item.presenter ? `<p class="font-label-sm text-label-sm text-on-surface-variant truncate">com ${escapeHtml(item.presenter)}</p>` : ''}
+        </div>
+        <div class="flex flex-col gap-1 shrink-0">
+          <button data-action="edit-program" data-id="${item.id}" title="Editar"
+                  class="text-tinta-suave hover:text-azul-700 transition-colors p-1">${ico('editar')}</button>
+          <button data-action="toggle-program" data-id="${item.id}" title="${item.active ? 'Esconder do site' : 'Mostrar no site'}"
+                  class="text-tinta-suave hover:text-azul-700 transition-colors p-1">${ico(item.active ? 'visivel' : 'oculto')}</button>
+          <button data-action="delete-program" data-id="${item.id}" title="Excluir"
+                  class="text-tinta-suave hover:text-error transition-colors p-1">${ico('excluir')}</button>
+        </div>
+      </article>`;
+  }
+
+  async function loadPrograms() {
+    const { programs } = await api('/admin/programs');
+    programCache = programs;
+    $('#program-count').textContent = `${programs.length} ${programs.length === 1 ? 'programa' : 'programas'}`;
+    $('#program-list').innerHTML = programs.length
+      ? programs.map(programRow).join('')
+      : '<p class="font-body-md text-body-md text-on-surface-variant border border-dashed border-outline-variant rounded-DEFAULT p-8 text-center">Nenhum programa cadastrado ainda.</p>';
+  }
+
+  function resetProgramForm() {
+    programForm.reset();
+    programForm.elements.id.value = '';
+    programForm.elements.active.checked = true;
+    marcarDias('');
+    $('#locutor-previa').classList.add('hidden');
+    $('#program-form-title').textContent = 'Novo programa';
+    $('#program-reset').classList.add('hidden');
+  }
+
+  programForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = programForm.querySelector('button[type=submit]');
+    button.disabled = true;
+    try {
+      // Os dias não saem de `formValues`: são várias caixas com o mesmo papel.
+      const values = { ...formValues(programForm), days: diasMarcados() };
+      const id = values.id;
+      delete values.id;
+      if (id) await api(`/admin/programs/${id}`, { method: 'PUT', body: values });
+      else await api('/admin/programs', { method: 'POST', body: values });
+      resetProgramForm();
+      await loadPrograms();
+      toast(id ? 'Programa atualizado.' : 'Programa cadastrado.');
+    } catch (error) {
+      toast(error.message, 'error');
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('#program-reset').addEventListener('click', resetProgramForm);
+
+  $('#program-list').addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const id = Number(button.dataset.id);
+    const item = programCache.find((entry) => entry.id === id);
+
+    try {
+      if (button.dataset.action === 'edit-program' && item) {
+        fillForm(programForm, item);
+        programForm.elements.id.value = item.id;
+        marcarDias(item.days);
+        mostrarPreviaLocutor();
+        $('#program-form-title').textContent = 'Editando programa';
+        $('#program-reset').classList.remove('hidden');
+        programForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (button.dataset.action === 'toggle-program' && item) {
+        await api(`/admin/programs/${id}`, { method: 'PUT', body: { active: !item.active } });
+        await loadPrograms();
+        toast(item.active ? 'Programa escondido do site.' : 'Programa publicado.');
+      } else if (button.dataset.action === 'delete-program') {
+        if (!confirm('Excluir este programa? A ação não pode ser desfeita.')) return;
+        await api(`/admin/programs/${id}`, { method: 'DELETE' });
+        if (Number(programForm.elements.id.value) === id) resetProgramForm();
+        await loadPrograms();
+        toast('Programa excluído.');
+      }
+    } catch (error) {
+      toast(error.message, 'error');
+    }
+  });
+
   /* ---------------------------------- conta --------------------------------- */
 
   $('#password-form').addEventListener('submit', async (event) => {
@@ -755,11 +918,14 @@
       $('#current-user').textContent = user.username;
       options = opts;
       renderHighlightOptions();
+      renderDiasCheckboxes();
 
-      await Promise.all([loadNews(), loadVideos(), loadSettings()]);
+      await Promise.all([loadNews(), loadVideos(), loadPrograms(), loadSettings()]);
 
       const initial = window.location.hash.slice(1);
-      activateTab(['noticias', 'videos', 'config', 'conta'].includes(initial) ? initial : 'noticias');
+      activateTab(
+        ['noticias', 'videos', 'programacao', 'config', 'conta'].includes(initial) ? initial : 'noticias'
+      );
     } catch (error) {
       toast(error.message, 'error');
     }

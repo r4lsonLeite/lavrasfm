@@ -6,6 +6,7 @@
   const ultimas = document.querySelector('[data-ultimas]');
   const grade = document.querySelector('[data-grade-noticias]');
   const videoSlot = document.querySelector('[data-video-slot]');
+  const programacao = document.querySelector('[data-programacao]');
 
   const escapeHtml = (value) =>
     String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -248,6 +249,171 @@
       </a>`;
   }
 
+  /* ------------------------------- programação ------------------------------- */
+
+  const DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  /** A foto do locutor, ou as iniciais do nome quando não há foto. */
+  function retratoHtml(programa, tamanho) {
+    const classe = `${tamanho} rounded-full object-cover shrink-0 bg-placa`;
+    if (programa.presenter_photo) {
+      return `<img src="${escapeHtml(programa.presenter_photo)}" loading="lazy"
+                   alt="${escapeHtml(programa.presenter || programa.name)}" class="${classe}">`;
+    }
+    const iniciais = (programa.presenter || programa.name)
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((parte) => parte[0] || '')
+      .join('')
+      .toUpperCase();
+    return `<span class="${classe} flex items-center justify-center font-display font-extrabold text-tinta-suave"
+                  aria-hidden="true">${escapeHtml(iniciais)}</span>`;
+  }
+
+  /** A tira "a seguir", no pé do cartão. */
+  function aSeguirHtml(proximo) {
+    if (!proximo) return '';
+    return `
+      <div class="border-t border-white/20 mt-4 pt-3 flex items-center gap-3">
+        ${retratoHtml(proximo, 'w-9 h-9')}
+        <div class="min-w-0 flex-grow">
+          <span class="font-label-sm text-label-sm uppercase text-azul-100">A seguir</span>
+          <p class="font-body-md text-[14px] font-semibold truncate">${escapeHtml(proximo.name)}</p>
+        </div>
+        <span class="font-body-md text-[13px] text-azul-100 whitespace-nowrap">
+          ${escapeHtml(proximo.next_label || proximo.start_time)}
+        </span>
+      </div>`;
+  }
+
+  /** O cartão do programa que está no ar agora. */
+  function noArHtml(programa, proximo) {
+    return `
+      <div class="bg-gradiente-azul text-branco rounded-2xl shadow-carta p-5 self-start">
+       <div class="flex items-center gap-4">
+        ${retratoHtml(programa, 'w-20 h-20 md:w-24 md:h-24')}
+        <div class="min-w-0">
+          <span class="font-label-sm text-label-sm uppercase text-amarelo-300 inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-ao-vivo block animate-pulse"></span> No ar agora
+          </span>
+          <h3 class="font-display text-[20px] md:text-[24px] font-extrabold leading-tight mt-1">
+            ${escapeHtml(programa.name)}
+          </h3>
+          <p class="font-body-md text-[13px] text-azul-100 mt-1">
+            ${escapeHtml(programa.schedule_label)}${programa.presenter ? ` · com ${escapeHtml(programa.presenter)}` : ''}
+          </p>
+          ${
+            programa.description
+              ? `<p class="font-body-md text-[13px] text-azul-100/90 line-clamp-2 mt-1">${escapeHtml(programa.description)}</p>`
+              : ''
+          }
+        </div>
+       </div>
+        ${aSeguirHtml(proximo)}
+      </div>`;
+  }
+
+  /** Uma linha da grade do dia escolhido. */
+  function programaLinhaHtml(programa, noArId) {
+    const agora = programa.id === noArId;
+    return `
+      <li class="flex items-center gap-4 py-3 border-b border-borda last:border-0 ${agora ? 'bg-azul-50 -mx-3 px-3 rounded-lg' : ''}">
+        ${retratoHtml(programa, 'w-12 h-12')}
+        <div class="min-w-0 flex-grow">
+          <h4 class="font-display text-[15px] font-bold text-tinta leading-tight">
+            ${escapeHtml(programa.name)}
+            ${agora ? '<span class="font-label-sm text-label-sm uppercase text-laranja-600 ml-2">no ar</span>' : ''}
+          </h4>
+          ${
+            programa.presenter
+              ? `<p class="font-body-md text-[12px] text-tinta-suave truncate">${escapeHtml(programa.presenter)}</p>`
+              : ''
+          }
+        </div>
+        <span class="font-body-md text-[13px] font-semibold text-tinta-media whitespace-nowrap tabular-nums">
+          ${escapeHtml(programa.schedule_label)}
+        </span>
+      </li>`;
+  }
+
+  /** Monta o cartão do "no ar" e a grade, com os botões de dia da semana. */
+  function programacaoHtml(programas, noAr, proximo, dia) {
+    const doDia = programas.filter((programa) => programa.days_list.includes(String(dia)));
+
+    const botoes = DIAS_CURTOS.map(
+      (rotulo, indice) => `
+        <button type="button" data-dia="${indice}"
+                class="font-label-sm text-label-sm uppercase px-3 py-2 rounded-full transition-colors ${
+                  indice === dia
+                    ? 'bg-azul-700 text-branco'
+                    : 'bg-placa text-tinta-media hover:bg-borda-forte'
+                }">${rotulo}</button>`
+    ).join('');
+
+    const grade = doDia.length
+      ? `<ul class="flex flex-col">${doDia.map((p) => programaLinhaHtml(p, noAr?.id)).join('')}</ul>`
+      : `<p class="font-body-md text-[14px] text-tinta-suave py-6 text-center">
+           Nenhum programa cadastrado para ${DIAS_CURTOS[dia]}.
+         </p>`;
+
+    return `
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-5 items-start">
+        ${
+          noAr
+            ? noArHtml(noAr, proximo)
+            : `<div class="bg-branco rounded-2xl shadow-carta p-5 flex items-start gap-4 self-start">
+                 <span class="w-20 h-20 rounded-full bg-placa shrink-0 flex items-center justify-center text-tinta-clara">
+                   ${ico('relogio', 30)}
+                 </span>
+                 <div>
+                   <span class="font-label-sm text-label-sm uppercase text-tinta-clara">Fora da grade</span>
+                   <h3 class="font-display text-[18px] font-extrabold text-tinta leading-tight mt-1">
+                     Programação musical
+                   </h3>
+                   <p class="font-body-md text-[13px] text-tinta-suave mt-1">
+                     Nenhum programa com apresentação neste horário — a rádio segue no ar com música.
+                     ${
+                       proximo
+                         ? `A seguir, <strong class="text-tinta">${escapeHtml(proximo.name)}</strong>,
+                            ${escapeHtml(proximo.next_label || proximo.start_time)}.`
+                         : ''
+                     }
+                   </p>
+                 </div>
+               </div>`
+        }
+        <div class="bg-branco rounded-2xl shadow-carta p-5">
+          <div class="flex flex-wrap gap-2 pb-3 mb-1" data-dias>${botoes}</div>
+          ${grade}
+        </div>
+      </div>`;
+  }
+
+  let estadoProgramacao = { programas: [], noAr: null, proximo: null, dia: 0 };
+
+  function renderizarProgramacao(programas, noAr, proximo, dia) {
+    if (!programacao) return;
+    estadoProgramacao = { programas, noAr, proximo, dia };
+    programacao.innerHTML = programas.length
+      ? programacaoHtml(programas, noAr, proximo, dia)
+      : vazio('Nenhum programa cadastrado ainda. Monte a grade pelo painel administrativo.');
+  }
+
+  programacao?.addEventListener('click', (evento) => {
+    const botao = evento.target.closest('[data-dia]');
+    if (!botao) return;
+    const { programas, noAr, proximo } = estadoProgramacao;
+    renderizarProgramacao(programas, noAr, proximo, Number(botao.dataset.dia));
+  });
+
+  /** A barra do player mostra o programa no ar; sem programa, o texto fixo. */
+  function mostrarNoAr(noAr, settings) {
+    const texto = noAr?.name || settings.now_playing || settings.tagline || '';
+    document.querySelectorAll('[data-now-playing]').forEach((el) => {
+      el.textContent = texto;
+    });
+  }
+
   const vazio = (mensagem) => `
     <div class="bg-branco border border-dashed border-borda-forte rounded-2xl p-10 text-center">
       <p class="font-body-md text-body-md text-tinta-suave">${escapeHtml(mensagem)}</p>
@@ -259,9 +425,6 @@
     document.title = `${settings.station_name} — Rádio ao vivo`;
     document.querySelectorAll('[data-station-name]').forEach((el) => {
       el.textContent = settings.station_name;
-    });
-    document.querySelectorAll('[data-now-playing]').forEach((el) => {
-      el.textContent = settings.now_playing || settings.tagline;
     });
     document.querySelectorAll('[data-tagline]').forEach((el) => {
       el.textContent = settings.tagline;
@@ -358,6 +521,13 @@
     }
 
     aplicarConfiguracoes(dados.settings);
+    mostrarNoAr(dados.onAir, dados.settings);
+    renderizarProgramacao(
+      dados.programs || [],
+      dados.onAir,
+      dados.nextUp,
+      dados.today ?? new Date().getDay()
+    );
 
     const noticias = dados.banner ? [dados.banner, ...dados.news] : [...dados.news];
 
@@ -395,9 +565,15 @@
       const resposta = await fetch('/api/now-playing');
       if (!resposta.ok) return;
       const info = await resposta.json();
-      document.querySelectorAll('[data-now-playing]').forEach((el) => {
-        if (info.now_playing) el.textContent = info.now_playing;
-      });
+      mostrarNoAr(info.onAir, info);
+
+      // Na virada de horário o cartão do "no ar" muda sozinho. A grade só é
+      // redesenhada se o visitante não tiver escolhido outro dia para ver.
+      const { programas, noAr, dia } = estadoProgramacao;
+      if ((noAr?.id ?? null) !== (info.onAir?.id ?? null)) {
+        renderizarProgramacao(programas, info.onAir, info.nextUp, dia);
+      }
+
       window.LavrasPlayer?.setStreamUrl(info.stream_url);
     } catch {
       /* silencioso: é só uma atualização de fundo */

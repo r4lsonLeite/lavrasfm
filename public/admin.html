@@ -36,6 +36,7 @@
     <div class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop flex gap-1 overflow-x-auto" id="tabs">
       <button data-tab="noticias" class="tab font-body-md text-body-md px-4 py-4 border-b-2 whitespace-nowrap">Notícias</button>
       <button data-tab="videos" class="tab font-body-md text-body-md px-4 py-4 border-b-2 whitespace-nowrap">Vídeos &amp; Lives</button>
+      <button data-tab="programacao" class="tab font-body-md text-body-md px-4 py-4 border-b-2 whitespace-nowrap">Programação</button>
       <button data-tab="config" class="tab font-body-md text-body-md px-4 py-4 border-b-2 whitespace-nowrap">Rádio &amp; Site</button>
       <button data-tab="conta" class="tab font-body-md text-body-md px-4 py-4 border-b-2 whitespace-nowrap">Conta</button>
     </div>
@@ -235,6 +236,108 @@
           <span class="font-label-sm text-label-sm text-on-surface-variant" id="video-count"></span>
         </div>
         <div id="video-list" class="flex flex-col gap-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ----------------------------- PROGRAMAÇÃO ------------------------------ -->
+  <section data-panel="programacao" class="hidden flex-col gap-8">
+    <div class="grid lg:grid-cols-[380px_1fr] gap-gutter items-start">
+
+      <form id="program-form" class="bg-surface border border-outline-variant rounded-DEFAULT p-6 flex flex-col gap-4 lg:sticky lg:top-44">
+        <div class="flex items-center justify-between">
+          <h2 class="font-headline-md text-headline-md text-primary" id="program-form-title">Novo programa</h2>
+          <button type="button" id="program-reset"
+                  class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hidden">Cancelar edição</button>
+        </div>
+        <input type="hidden" name="id">
+
+        <label class="flex flex-col gap-1">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Nome do programa *</span>
+          <input name="name" required maxlength="160" placeholder="Bom Dia Lavras"
+                 class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+        </label>
+
+        <label class="flex flex-col gap-1">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Locutor</span>
+          <input name="presenter" maxlength="120" placeholder="Nome de quem apresenta"
+                 class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+        </label>
+
+        <label class="flex flex-col gap-1">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Foto do locutor (URL)</span>
+          <input name="presenter_photo" type="url" placeholder="https://..."
+                 class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+          <span class="font-label-sm text-label-sm text-on-surface-variant">
+            Aparece redonda no site. Uma foto quadrada, de rosto, fica melhor. Sem foto, mostramos as iniciais.
+          </span>
+        </label>
+
+        <div id="locutor-previa" class="hidden flex items-center gap-3">
+          <img id="locutor-previa-img" alt="Prévia da foto do locutor"
+               class="w-16 h-16 rounded-full object-cover border border-outline-variant">
+          <p id="locutor-aviso" class="hidden font-label-sm text-label-sm px-3 py-2 rounded-DEFAULT bg-error-container text-on-error-container"></p>
+        </div>
+
+        <label class="flex flex-col gap-1">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Descrição</span>
+          <textarea name="description" rows="2" maxlength="600"
+                    class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0"></textarea>
+        </label>
+
+        <fieldset class="flex flex-col gap-2 border border-outline-variant rounded-DEFAULT p-4">
+          <legend class="font-label-sm text-label-sm text-on-surface-variant uppercase px-1">Dias da semana *</legend>
+          <div id="program-dias" class="flex flex-wrap gap-2"></div>
+          <div class="flex gap-3 pt-1">
+            <button type="button" data-dias-atalho="12345"
+                    class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline">Seg a Sex</button>
+            <button type="button" data-dias-atalho="06"
+                    class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline">Fim de semana</button>
+            <button type="button" data-dias-atalho="0123456"
+                    class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline">Todos os dias</button>
+          </div>
+        </fieldset>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Começa *</span>
+            <input name="start_time" type="time" required
+                   class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Termina *</span>
+            <input name="end_time" type="time" required
+                   class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+          </label>
+        </div>
+        <p class="font-label-sm text-label-sm text-on-surface-variant -mt-2">
+          Um programa que vira a noite (das 23:00 às 02:00, por exemplo) pode ser cadastrado assim mesmo.
+        </p>
+
+        <label class="flex flex-col gap-1">
+          <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ordem</span>
+          <input name="position" type="number" value="0" step="1"
+                 class="border border-outline-variant bg-surface-container-lowest rounded-DEFAULT px-3 py-2 font-body-md text-body-md focus:border-primary focus:ring-0">
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Desempata programas no mesmo horário.</span>
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="active" checked class="rounded-DEFAULT border-outline-variant text-primary focus:ring-primary">
+          <span class="font-body-md text-body-md">Visível no site</span>
+        </label>
+
+        <button type="submit"
+                class="bg-primary text-on-primary font-label-sm text-label-sm px-6 py-4 rounded hover:opacity-90 transition-opacity disabled:opacity-50">
+          Salvar programa
+        </button>
+      </form>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-headline-md text-headline-md text-primary">Grade cadastrada</h2>
+          <span class="font-label-sm text-label-sm text-on-surface-variant" id="program-count"></span>
+        </div>
+        <div id="program-list" class="flex flex-col gap-3"></div>
       </div>
     </div>
   </section>

@@ -4,6 +4,7 @@
  */
 import { db, saveSettings } from './db.js';
 import { createNews, createVideo } from './content.js';
+import { createProgram } from './programacao.js';
 
 const hoursAgo = (hours) =>
   new Date(Date.now() - hours * 3600_000).toISOString().slice(0, 19).replace('T', ' ');
@@ -104,6 +105,67 @@ createVideo({
   youtube_url: 'https://www.youtube.com/watch?v=5qap5aO4i9A',
   kind: 'video',
   position: 1
+});
+
+createProgram({
+  name: 'Bom Dia Lavras',
+  presenter: 'Railson Leite',
+  description: 'Notícias da cidade, prestação de serviço e música para começar o dia.',
+  days: '12345',
+  start_time: '06:00',
+  end_time: '09:00'
+});
+
+createProgram({
+  name: 'Manhã Total',
+  presenter: 'Equipe LavrasFM',
+  description: 'Sucessos, recados e pedidos dos ouvintes.',
+  days: '12345',
+  start_time: '09:00',
+  end_time: '12:00'
+});
+
+createProgram({
+  name: 'Almoço Musical',
+  presenter: 'Equipe LavrasFM',
+  days: '0123456',
+  start_time: '12:00',
+  end_time: '14:00'
+});
+
+createProgram({
+  name: 'Tarde da Gente',
+  presenter: 'Equipe LavrasFM',
+  description: 'A trilha da tarde, com participação do ouvinte pelo WhatsApp.',
+  days: '12345',
+  start_time: '14:00',
+  end_time: '18:00'
+});
+
+createProgram({
+  name: 'Noite de Prosa',
+  presenter: 'Equipe LavrasFM',
+  description: 'Entrevistas, cultura e a agenda da cidade para o dia seguinte.',
+  days: '12345',
+  start_time: '18:00',
+  end_time: '21:00'
+});
+
+createProgram({
+  name: 'Sábado Animado',
+  presenter: 'Equipe LavrasFM',
+  days: '6',
+  start_time: '08:00',
+  end_time: '12:00'
+});
+
+// Programa que vira a noite: começa no sábado e termina no domingo.
+createProgram({
+  name: 'Balada da Madrugada',
+  presenter: 'Equipe LavrasFM',
+  days: '56',
+  start_time: '23:00',
+  end_time: '02:00'
 });
 
 console.log('Conteúdo de exemplo criado. Rode `npm start` e abra http://localhost:3000');

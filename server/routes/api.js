@@ -21,6 +21,17 @@ import {
   deleteVideo
 } from '../content.js';
 import {
+  DIAS,
+  listPrograms,
+  getProgram,
+  createProgram,
+  updateProgram,
+  deleteProgram,
+  programaNoAr,
+  proximoNoAr,
+  agoraNaRadio
+} from '../programacao.js';
+import {
   requireAuth,
   throttleLogin,
   login,
@@ -44,13 +55,20 @@ function playableStreamUrl(settings) {
 api.get('/site', (_req, res) => {
   const news = listNews();
   const videos = listVideos();
+  const programs = listPrograms();
   const settings = getSettings();
   res.json({
     settings: { ...settings, stream_url: playableStreamUrl(settings) },
     banner: news.find((item) => item.highlight === 'banner') || null,
     news: news.filter((item) => item.highlight !== 'banner'),
     featuredVideo: videos.find((video) => video.featured) || videos[0] || null,
-    videos
+    videos,
+    programs,
+    onAir: programaNoAr(programs),
+    nextUp: proximoNoAr(programs),
+    // O dia da semana vem do servidor: a grade abre no dia certo mesmo para
+    // quem acessa de outro fuso ou com o relógio do aparelho errado.
+    today: agoraNaRadio().dia
   });
 });
 
@@ -95,6 +113,10 @@ function descreverArmazenamento() {
 
 api.get('/news', (_req, res) => res.json({ news: listNews() }));
 api.get('/videos', (_req, res) => res.json({ videos: listVideos() }));
+api.get('/programs', (_req, res) => {
+  const programs = listPrograms();
+  res.json({ programs, onAir: programaNoAr(programs), nextUp: proximoNoAr(programs) });
+});
 /**
  * Ouvintes conectados à retransmissão. Guardamos os controladores para poder
  * encerrar todos de uma vez quando o servidor for desligado.
@@ -187,9 +209,14 @@ api.get('/stream', async (req, res) => {
 
 api.get('/now-playing', (_req, res) => {
   const settings = getSettings();
+  const programas = listPrograms();
   res.json({
     station_name: settings.station_name,
     now_playing: settings.now_playing,
+    // O programa no ar vem daqui para a barra do player se atualizar sozinha
+    // na virada de horário, sem recarregar a página.
+    onAir: programaNoAr(programas),
+    nextUp: proximoNoAr(programas),
     stream_url: playableStreamUrl(settings),
     stream_format: settings.stream_format
   });
@@ -240,7 +267,12 @@ admin.use((_req, res, next) => {
 });
 
 admin.get('/options', (_req, res) =>
-  res.json({ highlights: HIGHLIGHTS, videoKinds: VIDEO_KINDS, settingKeys: Object.keys(DEFAULT_SETTINGS) })
+  res.json({
+    highlights: HIGHLIGHTS,
+    videoKinds: VIDEO_KINDS,
+    dias: DIAS,
+    settingKeys: Object.keys(DEFAULT_SETTINGS)
+  })
 );
 
 /** Lê título, resumo, foto e fonte direto da página da notícia. */
@@ -288,6 +320,27 @@ admin.delete('/videos/:id', (req, res) => {
   return deleteVideo(req.params.id)
     ? res.json({ ok: true })
     : res.status(404).json({ error: 'Vídeo não encontrado.' });
+});
+
+admin.get('/programs', (_req, res) =>
+  res.json({ programs: listPrograms({ includeInactive: true }) })
+);
+admin.post('/programs', (req, res) => res.status(201).json({ item: createProgram(req.body) }));
+
+admin.get('/programs/:id', (req, res) => {
+  const item = getProgram(req.params.id);
+  return item ? res.json({ item }) : res.status(404).json({ error: 'Programa não encontrado.' });
+});
+
+admin.put('/programs/:id', (req, res) => {
+  const item = updateProgram(req.params.id, req.body);
+  return item ? res.json({ item }) : res.status(404).json({ error: 'Programa não encontrado.' });
+});
+
+admin.delete('/programs/:id', (req, res) => {
+  return deleteProgram(req.params.id)
+    ? res.json({ ok: true })
+    : res.status(404).json({ error: 'Programa não encontrado.' });
 });
 
 /** Resolve o que foi colado (playlist, página de diretório, URL direta). */
