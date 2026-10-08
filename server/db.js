@@ -62,6 +62,22 @@ db.exec(`
     updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS programs (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT NOT NULL,
+    presenter       TEXT NOT NULL DEFAULT '',
+    presenter_photo TEXT NOT NULL DEFAULT '',
+    description     TEXT NOT NULL DEFAULT '',
+    -- Dias da semana como dígitos de 0 (domingo) a 6 (sábado): "123456".
+    days            TEXT NOT NULL DEFAULT '',
+    start_time      TEXT NOT NULL,
+    end_time        TEXT NOT NULL,
+    position        INTEGER NOT NULL DEFAULT 0,
+    active          INTEGER NOT NULL DEFAULT 1,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL DEFAULT ''
@@ -69,6 +85,7 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_news_order  ON news(active, position, published_at DESC);
   CREATE INDEX IF NOT EXISTS idx_videos_order ON videos(active, position, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_programs_order ON programs(active, start_time, position);
   CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
 

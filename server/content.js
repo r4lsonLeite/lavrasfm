@@ -1,5 +1,16 @@
 import { db } from './db.js';
 import { parseYoutubeId, youtubeThumbnail, youtubeEmbedUrl } from './youtube.js';
+import {
+  ValidationError,
+  requireText,
+  optionalText,
+  requireHttpUrl,
+  optionalHttpUrl,
+  toBool
+} from './campos.js';
+
+// Reexportado porque as rotas já importavam o erro daqui.
+export { ValidationError };
 
 /** Níveis de destaque disponíveis para uma notícia no painel. */
 export const HIGHLIGHTS = {
@@ -21,52 +32,6 @@ export const VIDEO_KINDS = {
   live: { label: 'Live do YouTube' },
   video: { label: 'Vídeo do YouTube' }
 };
-
-class ValidationError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ValidationError';
-    this.status = 400;
-  }
-}
-
-export { ValidationError };
-
-function requireText(value, field, { max = 500 } = {}) {
-  const text = String(value ?? '').trim();
-  if (!text) throw new ValidationError(`O campo "${field}" é obrigatório.`);
-  if (text.length > max) throw new ValidationError(`O campo "${field}" excede ${max} caracteres.`);
-  return text;
-}
-
-function optionalText(value, { max = 2000 } = {}) {
-  return String(value ?? '').trim().slice(0, max);
-}
-
-/** Só aceita http/https — evita `javascript:` e afins vindos do formulário. */
-function requireHttpUrl(value, field) {
-  const text = requireText(value, field, { max: 1000 });
-  let url;
-  try {
-    url = new URL(text);
-  } catch {
-    throw new ValidationError(`O campo "${field}" precisa ser um endereço válido (https://...).`);
-  }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new ValidationError(`O campo "${field}" precisa começar com http:// ou https://`);
-  }
-  return url.toString();
-}
-
-function optionalHttpUrl(value, field) {
-  const text = String(value ?? '').trim();
-  if (!text) return '';
-  return requireHttpUrl(text, field);
-}
-
-function toBool(value) {
-  return value === true || value === 1 || value === '1' || value === 'on' || value === 'true' ? 1 : 0;
-}
 
 /**
  * Normaliza para o formato UTC que o SQLite grava ("YYYY-MM-DD HH:MM:SS").

@@ -236,3 +236,12 @@ Decisões que valem conhecer antes de mexer no código:
   senha encerra as demais sessões.
 - **Segurança dos formulários**: só links `http`/`https` são aceitos e todo
   conteúdo é escapado antes de ir para a tela.
+- **`npm audit` e as dependências de desenvolvimento**: o que vai para
+  produção (`npm audit --omit=dev`) fica sem nenhum aviso, e a verificação
+  automática falha se deixar de ficar. Sobram avisos na cadeia de build do
+  Tailwind, todos com a mesma raiz: o pacote `braces`, que não tem versão
+  corrigida — a mais recente é a própria afetada. Subir o Tailwind para a
+  versão 4 **não** resolve: lá o `braces` volta pelo `@parcel/watcher` do
+  CLI. Como esses pacotes só rodam na hora de montar o CSS e nunca atendem
+  uma requisição, ficam como estão. O `overrides` do `package.json` fixa o
+  `postcss-selector-parser` numa versão corrigida, essa sim disponível.

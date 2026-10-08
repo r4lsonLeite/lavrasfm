@@ -1,0 +1,53 @@
+# Verificação automática a cada push e a cada pull request.
+#
+# Roda o que um colaborador rodaria na própria máquina antes de enviar: os
+# testes e a montagem do CSS. O último passo existe porque public/css/tailwind.css
+# é um arquivo gerado que fica versionado — é ele que o site serve. Se alguém
+# mexer no tema e esquecer de rodar `npm run build:css`, o site iria para o ar
+# com o CSS antigo. Aqui isso vira um erro de verificação, não uma surpresa
+# depois do deploy.
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # A mesma versão do Render (veja render.yaml). O projeto usa
+          # node:sqlite, que só existe a partir do Node 22.
+          node-version: '22'
+          cache: npm
+
+      # --include=dev: com NODE_ENV=production o npm pula as dependências de
+      # desenvolvimento, e sem o Tailwind o CSS não é montado.
+      - name: Instalar dependências
+        run: npm ci --include=dev
+
+      - name: Testes
+        run: npm test
+
+      - name: Montar o CSS
+        run: npm run build:css
+
+      - name: O CSS versionado está em dia?
+        run: |
+          if ! git diff --quiet public/css/tailwind.css; then
+            echo "::error file=public/css/tailwind.css::O CSS versionado não corresponde ao tema. Rode 'npm run build:css' e envie o arquivo gerado."
+            git diff --stat public/css/tailwind.css
+            exit 1
+          fi
+
+      # Falha apenas por problema conhecido no que vai para produção. Os avisos
+      # das dependências de desenvolvimento não derrubam a verificação: elas
+      # rodam no build e nunca atendem uma requisição.
+      - name: Dependências de produção sem falha conhecida
+        run: npm audit --omit=dev --audit-level=high
